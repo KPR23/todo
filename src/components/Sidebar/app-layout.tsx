@@ -1,4 +1,6 @@
-import { AppSidebar } from '@/components/app-sidebar';
+'use client';
+
+import { AppSidebar } from '@/components/Sidebar/app-sidebar';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,18 +10,29 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { SidebarProvider } from './ui/sidebar';
-import { Separator } from './ui/separator';
+import { useUser } from '@clerk/nextjs';
+import { Separator } from '../ui/separator';
+import { SidebarProvider } from '../ui/sidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useUser();
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <AppSidebar />
+        {user && (
+          <AppSidebar
+            user={{
+              name: user.fullName || 'Username',
+              email: user.primaryEmailAddress?.emailAddress || 'E-mail address',
+              avatar: user.imageUrl || 'https://github.com/shadcn.png',
+            }}
+          />
+        )}
         <div className="flex flex-col flex-1 p-2 pt-0">
-          <header className="flex h-16 shrink-0 items-center gap-2 px-4 py-3">
-            <SidebarTrigger className="-ml-1 cursor-pointer" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+          <header className="flex h-16 shrink-0 items-center gap-2 p-4">
+            {user && <SidebarTrigger className="-ml-1 cursor-pointer" />}
+            {user && <Separator orientation="vertical" className="mr-2 h-4" />}
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
