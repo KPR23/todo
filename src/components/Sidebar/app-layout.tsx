@@ -13,9 +13,11 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { useUser } from '@clerk/nextjs';
 import { Separator } from '../ui/separator';
 import { SidebarProvider } from '../ui/sidebar';
+import { usePathname } from 'next/navigation';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
+  const pathname = usePathname();
 
   return (
     <SidebarProvider>
@@ -36,13 +38,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
+                  <BreadcrumbLink href={pathname}>
+                    {(pathname.split('/').pop()?.replace(/-/g, ' ') || 'Home')
+                      .charAt(0)
+                      .toUpperCase() +
+                      (
+                        pathname.split('/').pop()?.replace(/-/g, ' ') || 'Home'
+                      ).slice(1)}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                  <BreadcrumbPage></BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

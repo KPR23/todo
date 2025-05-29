@@ -1,17 +1,8 @@
 'use client';
 
-import {
-  faCalendarDays,
-  faCircleQuestion,
-  faComment,
-  faCompass,
-  faHashtag,
-  faHouse,
-  faListUl,
-  faStar,
-} from '@fortawesome/free-solid-svg-icons';
-import * as React from 'react';
+import { faStar } from '@fortawesome/free-solid-svg-icons';
 import { usePathname } from 'next/navigation';
+import * as React from 'react';
 
 import { NavProjects } from '@/components/Sidebar/nav-projects';
 import { NavSecondary } from '@/components/Sidebar/nav-secondary';
@@ -25,48 +16,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { navSecondary, projects } from '@/lib/navigation-links';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const data = {
-  navSecondary: [
-    {
-      title: 'Support',
-      url: '#',
-      icon: faCircleQuestion,
-    },
-    {
-      title: 'Feedback',
-      url: '#',
-      icon: faComment,
-    },
-  ],
-  projects: [
-    {
-      name: 'Home',
-      url: '/home',
-      icon: faHouse,
-    },
-    {
-      name: 'My tasks',
-      url: '/my-tasks',
-      icon: faListUl,
-    },
-    {
-      name: 'Today',
-      url: '/today',
-      icon: faCompass,
-    },
-    {
-      name: 'Upcoming',
-      url: '/upcoming',
-      icon: faCalendarDays,
-    },
-    {
-      name: 'Categories',
-      url: '/categories',
-      icon: faHashtag,
-    },
-  ],
+  projects,
+  navSecondary,
 };
 interface User {
   name: string;
@@ -106,7 +61,7 @@ export function AppSidebar({
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
-                    {user.name.split(' ')[0]}&apos;s tasks
+                    {user.name?.split(' ')[0] || 'User'}&apos;s tasks
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
                     Personal
