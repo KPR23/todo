@@ -42,7 +42,7 @@ export function NavProjects({
                 <FontAwesomeIcon
                   icon={item.icon}
                   className={cn(
-                    'text-muted-foreground group-hover/menu-item:text-foreground p-0.5',
+                    'text-muted-foreground group-hover/menu-item:text-foreground p-0.5 py-0.75',
                     pathname === item.url && 'text-foreground'
                   )}
                 />

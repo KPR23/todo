@@ -9,11 +9,17 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import {
+  SidebarInset,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar';
 import { useUser } from '@clerk/nextjs';
+import { Search } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Input } from '../ui/input';
 import { Separator } from '../ui/separator';
 import { SidebarProvider } from '../ui/sidebar';
-import { usePathname } from 'next/navigation';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
@@ -21,47 +27,76 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        {user && (
-          <AppSidebar
-            user={{
-              name: user.fullName || 'Username',
-              email: user.primaryEmailAddress?.emailAddress || 'E-mail address',
-              avatar: user.imageUrl || 'https://github.com/shadcn.png',
-            }}
-          />
-        )}
-        <div className="flex flex-col flex-1 p-2 pt-0">
-          <header className="flex h-16 shrink-0 items-center gap-2 p-4">
-            {user && <SidebarTrigger className="-ml-1 cursor-pointer" />}
-            {user && <Separator orientation="vertical" className="mr-2 h-4" />}
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href={pathname}>
-                    {(pathname.split('/').pop()?.replace(/-/g, ' ') || 'Home')
-                      .charAt(0)
-                      .toUpperCase() +
-                      (
-                        pathname.split('/').pop()?.replace(/-/g, ' ') || 'Home'
-                      ).slice(1)}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage></BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </header>
+      <AppLayoutContent user={user} pathname={pathname}>
+        {children}
+      </AppLayoutContent>
+    </SidebarProvider>
+  );
+}
 
-          <div className="flex-1 rounded-2xl bg-muted/40 overflow-auto border border-sidebar-border">
-            <SidebarInset className="h-full w-full p-4">
-              {children}
-            </SidebarInset>
+function AppLayoutContent({
+  children,
+  user,
+  pathname,
+}: {
+  children: React.ReactNode;
+  user: ReturnType<typeof useUser>['user'];
+  pathname: string;
+}) {
+  const { state } = useSidebar();
+
+  return (
+    <div className="flex min-h-screen w-full">
+      {user && (
+        <AppSidebar
+          user={{
+            name: user.fullName || 'Username',
+            email: user.primaryEmailAddress?.emailAddress || 'E-mail address',
+            avatar: user.imageUrl || 'https://github.com/shadcn.png',
+          }}
+        />
+      )}
+
+      <div
+        className={`flex flex-col flex-1 p-2 pt-0 ${
+          state === 'expanded' ? 'pl-0' : ''
+        }`}
+      >
+        <header className="flex h-16 shrink-0 items-center gap-2 p-4">
+          {user && <SidebarTrigger className="-ml-1 cursor-pointer" />}
+          {user && <Separator orientation="vertical" className="mr-2 h-4" />}
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href={pathname}>
+                  {(pathname.split('/').pop()?.replace(/-/g, ' ') || 'Home')
+                    .charAt(0)
+                    .toUpperCase() +
+                    (
+                      pathname.split('/').pop()?.replace(/-/g, ' ') || 'Home'
+                    ).slice(1)}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage></BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          <div className="flex items-center relative ml-12 ">
+            <Input
+              type="text"
+              placeholder="Search"
+              className="w-[500px] pl-9"
+            />
+            <Search className="ml-2 size-4.5 absolute left-1 text-muted-foreground" />
           </div>
+        </header>
+
+        <div className="flex-1 rounded-2xl bg-muted/40 overflow-auto border border-sidebar-border">
+          <SidebarInset className="h-full w-full p-4">{children}</SidebarInset>
         </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }

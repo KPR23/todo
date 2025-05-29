@@ -3,6 +3,7 @@ import {
   faCircleQuestion,
   faComment,
   faCompass,
+  faFolderOpen,
   faHashtag,
   faHouse,
   faListUl,
@@ -28,6 +29,11 @@ export const projects = [
     name: 'Upcoming',
     url: '/upcoming',
     icon: faCalendarDays,
+  },
+  {
+    name: 'Projects',
+    url: '/projects',
+    icon: faFolderOpen,
   },
   {
     name: 'Categories',

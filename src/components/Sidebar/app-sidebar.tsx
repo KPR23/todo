@@ -15,6 +15,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { navSecondary, projects } from '@/lib/navigation-links';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -33,13 +34,14 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & { user: User }) {
   const pathname = usePathname();
+  const { state } = useSidebar();
   const activeProject = data.projects.find(
     (project) => project.url === pathname
   );
 
   return (
-    <Sidebar variant="inset" {...props} className="relative">
-      {activeProject && (
+    <Sidebar variant="inset" {...props}>
+      {activeProject && state === 'expanded' && (
         <div
           className="fixed left-0 w-0.5 bg-foreground z-50 pointer-events-none transition-all duration-300 rounded-full"
           style={{
@@ -51,7 +53,7 @@ export function AppSidebar({
         />
       )}
 
-      <SidebarHeader>
+      <SidebarHeader className="border-b border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
