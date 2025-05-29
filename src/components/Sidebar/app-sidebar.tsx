@@ -1,20 +1,18 @@
 'use client';
 
-import * as React from 'react';
 import {
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  LifeBuoy,
-  Map,
-  PieChart,
-  Send,
-  Settings2,
-  SquareTerminal,
-} from 'lucide-react';
+  faCalendarDays,
+  faCircleQuestion,
+  faComment,
+  faCompass,
+  faHashtag,
+  faHouse,
+  faListUl,
+  faStar,
+} from '@fortawesome/free-solid-svg-icons';
+import * as React from 'react';
+import { usePathname } from 'next/navigation';
 
-import { NavMain } from '@/components/Sidebar/nav-main';
 import { NavProjects } from '@/components/Sidebar/nav-projects';
 import { NavSecondary } from '@/components/Sidebar/nav-secondary';
 import { NavUser } from '@/components/Sidebar/nav-user';
@@ -27,122 +25,46 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const data = {
-  navMain: [
-    {
-      title: 'Playground',
-      url: '#',
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: 'History',
-          url: '#',
-        },
-        {
-          title: 'Starred',
-          url: '#',
-        },
-        {
-          title: 'Settings',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Models',
-      url: '#',
-      icon: Bot,
-      items: [
-        {
-          title: 'Genesis',
-          url: '#',
-        },
-        {
-          title: 'Explorer',
-          url: '#',
-        },
-        {
-          title: 'Quantum',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Documentation',
-      url: '#',
-      icon: BookOpen,
-      items: [
-        {
-          title: 'Introduction',
-          url: '#',
-        },
-        {
-          title: 'Get Started',
-          url: '#',
-        },
-        {
-          title: 'Tutorials',
-          url: '#',
-        },
-        {
-          title: 'Changelog',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Settings',
-      url: '#',
-      icon: Settings2,
-      items: [
-        {
-          title: 'General',
-          url: '#',
-        },
-        {
-          title: 'Team',
-          url: '#',
-        },
-        {
-          title: 'Billing',
-          url: '#',
-        },
-        {
-          title: 'Limits',
-          url: '#',
-        },
-      ],
-    },
-  ],
   navSecondary: [
     {
       title: 'Support',
       url: '#',
-      icon: LifeBuoy,
+      icon: faCircleQuestion,
     },
     {
       title: 'Feedback',
       url: '#',
-      icon: Send,
+      icon: faComment,
     },
   ],
   projects: [
     {
-      name: 'Design Engineering',
-      url: '#',
-      icon: Frame,
+      name: 'Home',
+      url: '/home',
+      icon: faHouse,
     },
     {
-      name: 'Sales & Marketing',
-      url: '#',
-      icon: PieChart,
+      name: 'My tasks',
+      url: '/my-tasks',
+      icon: faListUl,
     },
     {
-      name: 'Travel',
-      url: '#',
-      icon: Map,
+      name: 'Today',
+      url: '/today',
+      icon: faCompass,
+    },
+    {
+      name: 'Upcoming',
+      url: '/upcoming',
+      icon: faCalendarDays,
+    },
+    {
+      name: 'Categories',
+      url: '/categories',
+      icon: faHashtag,
     },
   ],
 };
@@ -155,19 +77,40 @@ export function AppSidebar({
   user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & { user: User }) {
+  const pathname = usePathname();
+  const activeProject = data.projects.find(
+    (project) => project.url === pathname
+  );
+
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar variant="inset" {...props} className="relative">
+      {activeProject && (
+        <div
+          className="fixed left-0 w-0.5 bg-foreground z-50 pointer-events-none transition-all duration-300 rounded-full"
+          style={{
+            height: '20px',
+            top: `${
+              88 + data.projects.findIndex((p) => p.url === pathname) * 40
+            }px`,
+          }}
+        />
+      )}
+
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <a href="#">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
+                <div className="bg-sidebar-primary flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <FontAwesomeIcon icon={faStar} className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-medium">
+                    {user.name.split(' ')[0]}&apos;s tasks
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    Personal
+                  </span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -175,7 +118,6 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
         <NavProjects projects={data.projects} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>

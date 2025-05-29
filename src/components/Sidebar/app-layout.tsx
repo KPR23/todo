@@ -48,7 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Breadcrumb>
           </header>
 
-          <div className="flex-1 rounded-2xl bg-muted/40 overflow-auto">
+          <div className="flex-1 rounded-2xl bg-muted/40 overflow-auto border border-sidebar-border">
             <SidebarInset className="h-full w-full p-4">
               {children}
             </SidebarInset>

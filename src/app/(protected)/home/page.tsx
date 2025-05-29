@@ -10,7 +10,7 @@ export default function Dashboard() {
   const todos = useQuery(api.todo.getTodos);
 
   return (
-    <div className="w-full">
+    <div className="w-full mx-auto max-w-2xl pt-20">
       <h1 className="text-xl font-semibold mb-4">Hello World</h1>
 
       <form
