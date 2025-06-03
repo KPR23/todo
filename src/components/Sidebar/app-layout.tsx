@@ -15,19 +15,22 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useUser } from '@clerk/nextjs';
+import { useQuery } from 'convex/react';
 import { Search } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { api } from '../../../convex/_generated/api';
+import { Doc } from '../../../convex/_generated/dataModel';
 import { Input } from '../ui/input';
 import { Separator } from '../ui/separator';
 import { SidebarProvider } from '../ui/sidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
+  const user = useQuery(api.users.getCurrentUser);
   const pathname = usePathname();
 
   return (
     <SidebarProvider>
-      <AppLayoutContent user={user} pathname={pathname}>
+      <AppLayoutContent user={user as Doc<'users'>} pathname={pathname}>
         {children}
       </AppLayoutContent>
     </SidebarProvider>
@@ -40,19 +43,20 @@ function AppLayoutContent({
   pathname,
 }: {
   children: React.ReactNode;
-  user: ReturnType<typeof useUser>['user'];
+  user: Doc<'users'>;
   pathname: string;
 }) {
   const { state } = useSidebar();
-
+  const { user: clerkUser } = useUser();
+  const imageUrl = clerkUser?.imageUrl;
   return (
     <div className="flex min-h-screen w-full">
       {user && (
         <AppSidebar
           user={{
-            name: user.fullName || 'Username',
-            email: user.primaryEmailAddress?.emailAddress || 'E-mail address',
-            avatar: user.imageUrl || 'https://github.com/shadcn.png',
+            name: user.name || 'Username',
+            email: user.email || 'E-mail address',
+            avatar: imageUrl || 'https://github.com/shadcn.png',
           }}
         />
       )}

@@ -3,13 +3,12 @@ import { v } from 'convex/values';
 
 export default defineSchema({
   users: defineTable({
-    clerkUserId: v.string(),
-    name: v.optional(v.string()),
-    email: v.optional(v.string()),
-    imageUrl: v.optional(v.string()),
-  }).index('by_clerkUserId', ['clerkUserId']),
+    name: v.string(),
+    email: v.string(),
+    tokenIdentifier: v.string(),
+  }).index('by_token', ['tokenIdentifier']),
   todos: defineTable({
-    userId: v.id('users'),
+    user: v.id('users'),
     projectId: v.id('projects'),
     labelId: v.id('labels'),
     taskName: v.string(),
@@ -21,10 +20,10 @@ export default defineSchema({
   }).vectorIndex('by_embedding', {
     vectorField: 'embedding',
     dimensions: 1536,
-    filterFields: ['userId'],
+    filterFields: ['user'],
   }),
   subTodos: defineTable({
-    userId: v.id('users'),
+    user: v.id('users'),
     projectId: v.id('projects'),
     labelId: v.id('labels'),
     parentId: v.id('todos'),
@@ -37,15 +36,15 @@ export default defineSchema({
   }).vectorIndex('by_embedding', {
     vectorField: 'embedding',
     dimensions: 1536,
-    filterFields: ['userId'],
+    filterFields: ['user'],
   }),
   labels: defineTable({
-    userId: v.union(v.id('users'), v.null()),
+    user: v.union(v.id('users'), v.null()),
     name: v.string(),
     type: v.union(v.literal('user'), v.literal('system')),
   }),
   projects: defineTable({
-    userId: v.union(v.id('users'), v.null()),
+    user: v.union(v.id('users'), v.null()),
     name: v.string(),
     type: v.union(v.literal('user'), v.literal('system')),
   }),

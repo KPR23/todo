@@ -1,23 +1,39 @@
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
-import { handleUserId } from './auth';
+import { authenticatedMutation, authenticatedQuery } from './lib/withUser';
 
-// Queries
-export const getTodos = query({
+export const getTodos = authenticatedQuery({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-
-    if (identity === null) {
-      throw new Error('Unauthenticated call to query');
-    }
-
-    return await ctx.db.query('todos').collect();
+    return await ctx.db
+      .query('todos')
+      .filter((q) => q.eq(q.field('user'), ctx.user._id))
+      .collect();
   },
 });
 
-// Mutations
-export const createTodo = mutation({
+export const getCompletedTodos = authenticatedQuery({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query('todos')
+      .filter((q) => q.eq(q.field('user'), ctx.user._id))
+      .filter((q) => q.eq(q.field('isCompleted'), true))
+      .collect();
+  },
+});
+
+export const getIncompletedTodos = authenticatedQuery({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query('todos')
+      .filter((q) => q.eq(q.field('user'), ctx.user._id))
+      .filter((q) => q.eq(q.field('isCompleted'), false))
+      .collect();
+  },
+});
+
+export const createTodo = authenticatedMutation({
   args: {
     taskName: v.string(),
     description: v.optional(v.string()),
@@ -28,30 +44,34 @@ export const createTodo = mutation({
     embedding: v.optional(v.array(v.float64())),
   },
   handler: async (ctx, args) => {
-    try {
-      const userId = await handleUserId(ctx);
+    await ctx.db.insert('todos', {
+      user: ctx.user._id,
+      taskName: args.taskName,
+      description: args.description,
+      priority: args.priority,
+      dueDate: args.dueDate,
+      projectId: args.projectId,
+      labelId: args.labelId,
+      embedding: args.embedding,
+      isCompleted: false,
+    });
+  },
+});
 
-      if (userId) {
-        const newTaskId = await ctx.db.insert('todos', {
-          userId,
-          taskName: args.taskName,
-          description: args.description,
-          priority: args.priority,
-          dueDate: args.dueDate,
-          projectId: args.projectId,
-          labelId: args.labelId,
-          isCompleted: false,
-          embedding: args.embedding,
-        });
+export const checkTodo = authenticatedMutation({
+  args: {
+    todoId: v.id('todos'),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.todoId, { isCompleted: true });
+  },
+});
 
-        return newTaskId;
-      }
-
-      return null;
-    } catch (err) {
-      console.log('[Convex] Error occurred during createTodo mutation', err);
-
-      return null;
-    }
+export const uncheckTodo = authenticatedMutation({
+  args: {
+    todoId: v.id('todos'),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.todoId, { isCompleted: false });
   },
 });

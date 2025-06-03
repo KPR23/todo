@@ -13,8 +13,9 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as auth from "../auth.js";
+import type * as lib_withUser from "../lib/withUser.js";
 import type * as todo from "../todo.js";
+import type * as users from "../users.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -25,8 +26,9 @@ import type * as todo from "../todo.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  auth: typeof auth;
+  "lib/withUser": typeof lib_withUser;
   todo: typeof todo;
+  users: typeof users;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
