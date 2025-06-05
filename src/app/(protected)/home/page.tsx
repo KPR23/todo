@@ -1,19 +1,17 @@
 'use client';
 
-import TodoPage from '@/components/Todo/todoPage';
+import TodoPage from '@/components/Todo/todo-page';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useMutation, useQuery } from 'convex/react';
+import { useQuery } from 'convex/react';
+import { FilterIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '../../../../convex/_generated/api';
-import { Id } from '../../../../convex/_generated/dataModel';
 
 export default function Home() {
+  const [showAddTask, setShowAddTask] = useState(false);
   const todos = useQuery(api.todo.getTodos) || [];
   const completedTodos = useQuery(api.todo.getCompletedTodos) || [];
   const incompletedTodos = useQuery(api.todo.getIncompletedTodos) || [];
-  const createTodo = useMutation(api.todo.createTodo);
-  const [newTodo, setNewTodo] = useState('');
   if (!todos) {
     return <div>Loading...</div>;
   }
@@ -21,32 +19,26 @@ export default function Home() {
   return (
     <main className="flex flex-col p-6 grow">
       <div className="flex flex-col gap-4 mx-auto w-full max-w-6xl">
-        <h1 className="text-lg md:text-2xl font-semibold">Home</h1>
-        <div className="flex gap-2">
-          <Input
-            type="text"
-            placeholder="Add a new todo"
-            onChange={(e) => setNewTodo(e.target.value)}
-          />
-          <Button
-            onClick={() =>
-              createTodo({
-                taskName: newTodo,
-                description: '',
-                projectId: 'kx7db6cp68v4g4ntrrm3kf96j57h4tc9' as Id<'projects'>,
-                labelId: 'ks77fazrxve6ppn65txszcwmqs7h4ad8' as Id<'labels'>,
-                dueDate: 0,
-                priority: 0,
-              })
-            }
-          >
-            Add
-          </Button>
+        <div className="flex justify-between items-center">
+          <h1 className="text-lg md:text-2xl font-semibold">Home</h1>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowAddTask(true)} disabled={showAddTask}>
+              <PlusIcon className="w-4 h-4" />
+              Add Task
+            </Button>
+            <Button variant="outline">
+              <FilterIcon className="w-4 h-4" />
+              Filters
+            </Button>
+          </div>
         </div>
+        <hr className="my-2 w-full border-t border-zinc-950/10 dark:border-white/10" />
         <TodoPage
           todos={todos}
           completedTodos={completedTodos}
           incompletedTodos={incompletedTodos}
+          showAddTask={showAddTask}
+          setShowAddTask={setShowAddTask}
         />
       </div>
     </main>
