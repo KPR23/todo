@@ -43,7 +43,7 @@ function AppLayoutContent({
   pathname,
 }: {
   children: React.ReactNode;
-  user: Doc<'users'>;
+  user: Doc<'users'> | undefined;
   pathname: string;
 }) {
   const { state } = useSidebar();

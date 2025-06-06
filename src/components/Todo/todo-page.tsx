@@ -1,3 +1,4 @@
+import { Dispatch, SetStateAction } from 'react';
 import { Doc } from '../../../convex/_generated/dataModel';
 import { AddTaskForm } from './add-task-form';
 import TodoList from './todo-list';
@@ -13,7 +14,7 @@ export default function TodoPage({
   completedTodos: Doc<'todos'>[];
   incompletedTodos: Doc<'todos'>[];
   showAddTask: boolean;
-  setShowAddTask: (show: boolean) => void;
+  setShowAddTask: Dispatch<SetStateAction<boolean>>;
 }) {
   return (
     <div className="flex flex-col gap-2">

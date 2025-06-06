@@ -5,12 +5,19 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
+import { cn } from '@/lib/utils';
+import { faCalendarDays } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
+import { Dispatch, SetStateAction } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '../ui/button';
+import { Calendar } from '../ui/calendar';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Textarea } from '../ui/textarea';
 
 const formSchema = z.object({
@@ -44,7 +51,7 @@ const formSchema = z.object({
 export function AddTaskForm({
   setShowAddTask,
 }: {
-  setShowAddTask: (show: boolean) => void;
+  setShowAddTask: Dispatch<SetStateAction<boolean>>;
 }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,7 +71,10 @@ export function AddTaskForm({
   return (
     <Card className="flex gap-2 p-4">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col ml-2"
+        >
           <FormField
             control={form.control}
             name="taskName"
@@ -73,7 +83,7 @@ export function AddTaskForm({
                 <FormControl>
                   <Input
                     placeholder="Write a task name"
-                    className="!text-lg !border-none !bg-card focus-visible:ring-0 focus-visible:border-none"
+                    className="!text-lg !p-0 !border-none !bg-card focus-visible:ring-0 focus-visible:border-none"
                     {...field}
                     autoFocus
                   />
@@ -89,8 +99,8 @@ export function AddTaskForm({
               <FormItem className="w-full">
                 <FormControl>
                   <Textarea
-                    placeholder="What is this task about?"
-                    className="border-none !text-base !bg-card focus-visible:ring-0 focus-visible:border-none"
+                    placeholder="What is this task about? (optional)"
+                    className="resize-none !p-0 border-none !text-base !bg-card focus-visible:ring-0 focus-visible:border-none"
                     {...field}
                   />
                 </FormControl>
@@ -98,12 +108,55 @@ export function AddTaskForm({
               </FormItem>
             )}
           />
-          <div className="flex gap-2 mt-4 p-2">
+          <FormField
+            control={form.control}
+            name="dueDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={'outline'}
+                        className={cn(
+                          'w-[240px] pl-3 text-left font-normal',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <FontAwesomeIcon
+                          icon={faCalendarDays}
+                          className="ml-auto h-4 w-4 opacity-50"
+                        />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date('1900-01-01')
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* <CardFooter className="items-center justify-end mt-4 gap-2">
             <Button variant={'outline'} onClick={() => setShowAddTask(false)}>
               Cancel
             </Button>
             <Button type="submit">Add Task</Button>
-          </div>
+          </CardFooter> */}
         </form>
       </Form>
     </Card>
