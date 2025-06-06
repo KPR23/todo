@@ -63,6 +63,10 @@ export const checkTodo = authenticatedMutation({
     todoId: v.id('todos'),
   },
   handler: async (ctx, args) => {
+    const todo = await ctx.db.get(args.todoId);
+    if (!todo || todo.user !== ctx.user._id) {
+      throw new Error('[Convex] Todo not found or unauthorized');
+    }
     await ctx.db.patch(args.todoId, { isCompleted: true });
   },
 });
@@ -72,6 +76,10 @@ export const uncheckTodo = authenticatedMutation({
     todoId: v.id('todos'),
   },
   handler: async (ctx, args) => {
+    const todo = await ctx.db.get(args.todoId);
+    if (!todo || todo.user !== ctx.user._id) {
+      throw new Error('[Convex] Todo not found or unauthorized');
+    }
     await ctx.db.patch(args.todoId, { isCompleted: false });
   },
 });

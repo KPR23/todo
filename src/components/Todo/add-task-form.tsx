@@ -5,9 +5,14 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { GET_STARTED_LABEL_ID, GET_STARTED_PROJECT_ID } from '@/lib/constans';
+import { GET_STARTED_LABEL_ID, GET_STARTED_PROJECT_ID } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { faCalendarDays } from '@fortawesome/free-solid-svg-icons';
+import {
+  faBolt,
+  faCalendarDays,
+  faFolderOpen,
+  faHashtag,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -28,6 +33,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Textarea } from '../ui/textarea';
+import { ChevronDownIcon } from 'lucide-react';
 
 const formSchema = z.object({
   taskName: z.string().min(2, {
@@ -139,26 +145,28 @@ export function AddTaskForm({
               control={form.control}
               name="dueDate"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem className="flex flex-col ">
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant={'outline'}
                           className={cn(
-                            'w-[240px] pl-3 text-left font-normal',
+                            'text-left font-normal ',
                             !field.value && 'text-muted-foreground'
                           )}
                         >
+                          <FontAwesomeIcon
+                            icon={faCalendarDays}
+                            className="h-4 w-4 text-muted-foreground"
+                          />
+
                           {field.value ? (
                             format(field.value, 'PPP')
                           ) : (
                             <span>Pick a date</span>
                           )}
-                          <FontAwesomeIcon
-                            icon={faCalendarDays}
-                            className="ml-auto h-4 w-4 opacity-50"
-                          />
+                          <ChevronDownIcon className="size-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
@@ -188,11 +196,13 @@ export function AddTaskForm({
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a priority" />
-                        </SelectTrigger>
-                      </FormControl>
+                      <SelectTrigger>
+                        <FontAwesomeIcon
+                          icon={faBolt}
+                          className="h-4 w-4 text-muted-foreground"
+                        />
+                        <SelectValue placeholder="Select a priority" />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="low">Low</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
@@ -218,6 +228,10 @@ export function AddTaskForm({
                     >
                       <FormControl>
                         <SelectTrigger>
+                          <FontAwesomeIcon
+                            icon={faFolderOpen}
+                            className="h-4 w-4 text-muted-foreground"
+                          />
                           <SelectValue placeholder="Select a project" />
                         </SelectTrigger>
                       </FormControl>
@@ -248,6 +262,10 @@ export function AddTaskForm({
                     >
                       <FormControl>
                         <SelectTrigger>
+                          <FontAwesomeIcon
+                            icon={faHashtag}
+                            className="h-4 w-4 text-muted-foreground"
+                          />
                           <SelectValue placeholder="Select a label" />
                         </SelectTrigger>
                       </FormControl>
