@@ -5,9 +5,14 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { GET_STARTED_LABEL_ID, GET_STARTED_PROJECT_ID } from '@/lib/constans';
+import { GET_STARTED_LABEL_ID, GET_STARTED_PROJECT_ID } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { faCalendarDays } from '@fortawesome/free-solid-svg-icons';
+import {
+  faBolt,
+  faCalendarDays,
+  faFolderOpen,
+  faHashtag,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -28,17 +33,16 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Textarea } from '../ui/textarea';
+import { ChevronDownIcon } from 'lucide-react';
+import { useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { toast } from 'sonner';
 
 const formSchema = z.object({
   taskName: z.string().min(2, {
     message: 'Task name must be at least 2 characters.',
   }),
-  description: z
-    .string()
-    .min(2, {
-      message: 'Task description must be at least 2 characters.',
-    })
-    .optional(),
+  description: z.string().optional(),
   priority: z.enum(['low', 'medium', 'high'], {
     invalid_type_error: 'Priority must be low, medium, or high.',
     required_error: 'Priority is required.',
@@ -75,27 +79,50 @@ export function AddTaskForm({
     // parentTask?.labelId ||
     GET_STARTED_LABEL_ID as Id<'labels'>;
 
+  const defaultValues = {
+    taskName: '',
+    description: '',
+    priority: 'low',
+    dueDate: new Date(),
+    projectId,
+    labelId,
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      taskName: '',
-      description: '',
-      priority: 'low',
-      dueDate: new Date(),
-      projectId,
-      labelId,
-    },
+    defaultValues: defaultValues as z.infer<typeof formSchema>,
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  const createTodo = useMutation(api.todos.createTodo);
+
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    const { taskName, description, priority, projectId, labelId, dueDate } =
+      data;
+
+    createTodo({
+      taskName,
+      description: description || undefined,
+      priority,
+      dueDate: dueDate.getTime(),
+      projectId: projectId as Id<'projects'>,
+      labelId: labelId as Id<'labels'>,
+    })
+      .then(() => {
+        setShowAddTask(false);
+        toast.success('Task created successfully 🎉');
+        form.reset(defaultValues as z.infer<typeof formSchema>);
+      })
+      .catch((error) => {
+        toast.error('Failed to create task', { description: error.message });
+      });
   }
+
   return (
     <Card className="flex gap-2 p-4">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col ml-2 space-y-2"
+          className="flex flex-col space-y-2"
         >
           {/* Task name */}
           <FormField
@@ -105,8 +132,8 @@ export function AddTaskForm({
               <FormItem>
                 <FormControl>
                   <Input
+                    className="!rounded-lg"
                     placeholder="Write a task name"
-                    className="!text-lg !border-none !bg-card focus-visible:ring-0 focus-visible:border-none"
                     {...field}
                     autoFocus
                   />
@@ -125,7 +152,7 @@ export function AddTaskForm({
                 <FormControl>
                   <Textarea
                     placeholder="What is this task about? (optional)"
-                    className="resize-none "
+                    className="resize-none"
                     {...field}
                   />
                 </FormControl>
@@ -139,26 +166,28 @@ export function AddTaskForm({
               control={form.control}
               name="dueDate"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem className="flex flex-col ">
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant={'outline'}
                           className={cn(
-                            'w-[240px] pl-3 text-left font-normal',
+                            'text-left font-normal ',
                             !field.value && 'text-muted-foreground'
                           )}
                         >
+                          <FontAwesomeIcon
+                            icon={faCalendarDays}
+                            className="h-4 w-4 text-muted-foreground"
+                          />
+
                           {field.value ? (
                             format(field.value, 'PPP')
                           ) : (
                             <span>Pick a date</span>
                           )}
-                          <FontAwesomeIcon
-                            icon={faCalendarDays}
-                            className="ml-auto h-4 w-4 opacity-50"
-                          />
+                          <ChevronDownIcon className="size-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
@@ -167,7 +196,6 @@ export function AddTaskForm({
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) => date < new Date()}
                         initialFocus
                       />
                     </PopoverContent>
@@ -188,11 +216,13 @@ export function AddTaskForm({
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a priority" />
-                        </SelectTrigger>
-                      </FormControl>
+                      <SelectTrigger>
+                        <FontAwesomeIcon
+                          icon={faBolt}
+                          className="h-4 w-4 text-muted-foreground"
+                        />
+                        <SelectValue placeholder="Select a priority" />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="low">Low</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
@@ -218,6 +248,10 @@ export function AddTaskForm({
                     >
                       <FormControl>
                         <SelectTrigger>
+                          <FontAwesomeIcon
+                            icon={faFolderOpen}
+                            className="h-4 w-4 text-muted-foreground"
+                          />
                           <SelectValue placeholder="Select a project" />
                         </SelectTrigger>
                       </FormControl>
@@ -248,6 +282,10 @@ export function AddTaskForm({
                     >
                       <FormControl>
                         <SelectTrigger>
+                          <FontAwesomeIcon
+                            icon={faHashtag}
+                            className="h-4 w-4 text-muted-foreground"
+                          />
                           <SelectValue placeholder="Select a label" />
                         </SelectTrigger>
                       </FormControl>
@@ -266,11 +304,17 @@ export function AddTaskForm({
             />
           </CardContent>
 
-          <CardFooter className="items-center gap-2 justify-end">
-            <Button variant={'outline'} onClick={() => setShowAddTask(false)}>
+          <CardFooter className="items-center mt-2 grid grid-cols-2 gap-2 w-full justify-end">
+            <Button
+              className="w-full"
+              variant={'outline'}
+              onClick={() => setShowAddTask(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit">Add Task</Button>
+            <Button className="w-full" type="submit">
+              Add Task
+            </Button>
           </CardFooter>
         </form>
       </Form>
