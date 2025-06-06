@@ -1,6 +1,7 @@
 'use client';
 
-import TodoPage from '@/components/Todo/todo-page';
+import { AddTaskForm } from '@/components/Todo/add-task-form';
+import TodoList from '@/components/Todo/todo-list';
 import { Button } from '@/components/ui/button';
 import { useQuery } from 'convex/react';
 import { FilterIcon, PlusIcon } from 'lucide-react';
@@ -9,12 +10,11 @@ import { api } from '../../../../convex/_generated/api';
 
 export default function Home() {
   const [showAddTask, setShowAddTask] = useState(false);
-  const todos = useQuery(api.todo.getTodos) || [];
-  const completedTodos = useQuery(api.todo.getCompletedTodos) || [];
-  const incompletedTodos = useQuery(api.todo.getIncompletedTodos) || [];
-  if (!todos) {
-    return <div>Loading...</div>;
-  }
+  const todos = useQuery(api.todos.getTodos) || [];
+  const completedTodos = useQuery(api.todos.getCompletedTodos) || [];
+  const incompletedTodos = useQuery(api.todos.getIncompletedTodos) || [];
+  const projects = useQuery(api.projects.getProjects) || [];
+  const labels = useQuery(api.labels.getLabels) || [];
 
   return (
     <main className="flex flex-col p-6 grow">
@@ -33,13 +33,34 @@ export default function Home() {
           </div>
         </div>
         <hr className="my-2 w-full border-t border-zinc-950/10 dark:border-white/10" />
-        <TodoPage
-          todos={todos}
-          completedTodos={completedTodos}
-          incompletedTodos={incompletedTodos}
-          showAddTask={showAddTask}
-          setShowAddTask={setShowAddTask}
-        />
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl mt-4 mb-2 font-bold">All</h2>
+          {showAddTask && (
+            <AddTaskForm
+              setShowAddTask={setShowAddTask}
+              projects={projects}
+              labels={labels}
+            />
+          )}
+          <TodoList todos={todos} />
+          {completedTodos.length > 0 && (
+            <>
+              <h2 className="text-2xl mt-4 mb-2 font-bold flex items-center gap-2">
+                Completed
+                <span className="text-lg text-muted-foreground">
+                  ({completedTodos.length})
+                </span>
+              </h2>
+              <TodoList todos={completedTodos} />
+            </>
+          )}
+          {incompletedTodos.length > 0 && (
+            <>
+              <h2 className="text-2xl mt-4 mb-2 font-bold">Incompleted</h2>
+              <TodoList todos={incompletedTodos} />
+            </>
+          )}
+        </div>
       </div>
     </main>
   );

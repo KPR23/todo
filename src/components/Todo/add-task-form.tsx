@@ -5,6 +5,7 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
+import { GET_STARTED_LABEL_ID, GET_STARTED_PROJECT_ID } from '@/lib/constans';
 import { cn } from '@/lib/utils';
 import { faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -13,11 +14,19 @@ import { format } from 'date-fns';
 import { Dispatch, SetStateAction } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { Doc, Id } from '../../../convex/_generated/dataModel';
 import { Button } from '../ui/button';
 import { Calendar } from '../ui/calendar';
-import { Card, CardFooter } from '../ui/card';
+import { Card, CardContent, CardFooter } from '../ui/card';
 import { Input } from '../ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 import { Textarea } from '../ui/textarea';
 
 const formSchema = z.object({
@@ -50,9 +59,22 @@ const formSchema = z.object({
 
 export function AddTaskForm({
   setShowAddTask,
+  projects,
+  labels,
 }: {
   setShowAddTask: Dispatch<SetStateAction<boolean>>;
+  projects: Doc<'projects'>[];
+  labels: Doc<'labels'>[];
 }) {
+  const projectId =
+    // myProjectId ||
+    // parentTask?.projectId ||
+    GET_STARTED_PROJECT_ID as Id<'projects'>;
+
+  const labelId =
+    // parentTask?.labelId ||
+    GET_STARTED_LABEL_ID as Id<'labels'>;
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,8 +82,8 @@ export function AddTaskForm({
       description: '',
       priority: 'low',
       dueDate: new Date(),
-      projectId: '',
-      labelId: '',
+      projectId,
+      labelId,
     },
   });
 
@@ -73,8 +95,9 @@ export function AddTaskForm({
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col ml-2"
+          className="flex flex-col ml-2 space-y-2"
         >
+          {/* Task name */}
           <FormField
             control={form.control}
             name="taskName"
@@ -83,7 +106,7 @@ export function AddTaskForm({
                 <FormControl>
                   <Input
                     placeholder="Write a task name"
-                    className="!text-lg !p-0 !border-none !bg-card focus-visible:ring-0 focus-visible:border-none"
+                    className="!text-lg !border-none !bg-card focus-visible:ring-0 focus-visible:border-none"
                     {...field}
                     autoFocus
                   />
@@ -92,6 +115,8 @@ export function AddTaskForm({
               </FormItem>
             )}
           />
+
+          {/* Description */}
           <FormField
             control={form.control}
             name="description"
@@ -100,7 +125,7 @@ export function AddTaskForm({
                 <FormControl>
                   <Textarea
                     placeholder="What is this task about? (optional)"
-                    className="resize-none !p-0 border-none !text-base !bg-card focus-visible:ring-0 focus-visible:border-none"
+                    className="resize-none "
                     {...field}
                   />
                 </FormControl>
@@ -108,50 +133,140 @@ export function AddTaskForm({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="dueDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={'outline'}
-                        className={cn(
-                          'w-[240px] pl-3 text-left font-normal',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, 'PPP')
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <FontAwesomeIcon
-                          icon={faCalendarDays}
-                          className="ml-auto h-4 w-4 opacity-50"
-                        />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date('1900-01-01')
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <CardFooter className="items-center justify-end mt-4 gap-2">
+          <CardContent className="flex p-0 gap-2">
+            {/* Due date */}
+            <FormField
+              control={form.control}
+              name="dueDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={'outline'}
+                          className={cn(
+                            'w-[240px] pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, 'PPP')
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <FontAwesomeIcon
+                            icon={faCalendarDays}
+                            className="ml-auto h-4 w-4 opacity-50"
+                          />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Priority */}
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Project */}
+            <FormField
+              control={form.control}
+              name="projectId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a project" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {projects.map((project) => (
+                          <SelectItem key={project._id} value={project._id}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Label */}
+            <FormField
+              control={form.control}
+              name="labelId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a label" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {labels.map((label) => (
+                          <SelectItem key={label._id} value={label._id}>
+                            {label.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+
+          <CardFooter className="items-center gap-2 justify-end">
             <Button variant={'outline'} onClick={() => setShowAddTask(false)}>
               Cancel
             </Button>
