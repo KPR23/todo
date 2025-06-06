@@ -1,4 +1,5 @@
-import { authenticatedQuery } from './lib/withUser';
+import { v } from 'convex/values';
+import { authenticatedMutation, authenticatedQuery } from './lib/withUser';
 
 export const getProjects = authenticatedQuery({
   args: {},
@@ -14,5 +15,18 @@ export const getProjects = authenticatedQuery({
       .collect();
 
     return [...systemProjects, ...userProjects];
+  },
+});
+
+export const createProject = authenticatedMutation({
+  args: {
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert('projects', {
+      name: args.name,
+      type: 'user',
+      user: ctx.user._id,
+    });
   },
 });
