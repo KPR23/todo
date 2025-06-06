@@ -18,8 +18,8 @@ import {
 } from '../ui/dialog';
 
 export default function Todo({ todo }: { todo: Doc<'todos'> }) {
-  const checkTodo = useMutation(api.todo.checkTodo);
-  const uncheckTodo = useMutation(api.todo.uncheckTodo);
+  const checkTodo = useMutation(api.todos.checkTodo);
+  const uncheckTodo = useMutation(api.todos.uncheckTodo);
 
   const handleOnChangeTodo = () => {
     if (todo.isCompleted) {
