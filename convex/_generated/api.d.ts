@@ -16,6 +16,7 @@ import type {
 import type * as labels from "../labels.js";
 import type * as lib_withUser from "../lib/withUser.js";
 import type * as projects from "../projects.js";
+import type * as subTodos from "../subTodos.js";
 import type * as todos from "../todos.js";
 import type * as users from "../users.js";
 
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   labels: typeof labels;
   "lib/withUser": typeof lib_withUser;
   projects: typeof projects;
+  subTodos: typeof subTodos;
   todos: typeof todos;
   users: typeof users;
 }>;

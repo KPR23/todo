@@ -18,6 +18,15 @@ export const getProjects = authenticatedQuery({
   },
 });
 
+export const getProjectByProjectId = authenticatedQuery({
+  args: {
+    projectId: v.id('projects'),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.projectId);
+  },
+});
+
 export const createProject = authenticatedMutation({
   args: {
     name: v.string(),

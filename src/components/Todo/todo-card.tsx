@@ -94,8 +94,7 @@ export default function Todo({ todo }: { todo: Doc<'todos'> }) {
               </Badge>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Open menu</span>
+                  <Button variant="ghost" className="size-8">
                     <FontAwesomeIcon icon={faEllipsisVertical} />
                   </Button>
                 </DropdownMenuTrigger>

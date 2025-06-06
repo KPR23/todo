@@ -3,8 +3,9 @@
 import { AddTaskForm } from '@/components/Todo/add-task-form';
 import TodoList from '@/components/Todo/todo-list';
 import { Button } from '@/components/ui/button';
+import { faFilter, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from 'convex/react';
-import { FilterIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '../../../../convex/_generated/api';
 
@@ -23,11 +24,11 @@ export default function Home() {
           <h1 className="text-lg md:text-2xl font-semibold">Home</h1>
           <div className="flex gap-2">
             <Button onClick={() => setShowAddTask(true)} disabled={showAddTask}>
-              <PlusIcon className="w-4 h-4" />
+              <FontAwesomeIcon icon={faPlus} />
               Add Task
             </Button>
             <Button variant="outline">
-              <FilterIcon className="w-4 h-4" />
+              <FontAwesomeIcon icon={faFilter} />
               Filters
             </Button>
           </div>
