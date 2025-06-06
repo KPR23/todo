@@ -37,7 +37,7 @@ export const createTodo = authenticatedMutation({
   args: {
     taskName: v.string(),
     description: v.optional(v.string()),
-    priority: v.number(),
+    priority: v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
     dueDate: v.number(),
     projectId: v.id('projects'),
     labelId: v.id('labels'),

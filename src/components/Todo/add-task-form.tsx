@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '../ui/button';
 import { Calendar } from '../ui/calendar';
-import { Card } from '../ui/card';
+import { Card, CardFooter } from '../ui/card';
 import { Input } from '../ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Textarea } from '../ui/textarea';
@@ -151,12 +151,12 @@ export function AddTaskForm({
               </FormItem>
             )}
           />
-          {/* <CardFooter className="items-center justify-end mt-4 gap-2">
+          <CardFooter className="items-center justify-end mt-4 gap-2">
             <Button variant={'outline'} onClick={() => setShowAddTask(false)}>
               Cancel
             </Button>
             <Button type="submit">Add Task</Button>
-          </CardFooter> */}
+          </CardFooter>
         </form>
       </Form>
     </Card>
