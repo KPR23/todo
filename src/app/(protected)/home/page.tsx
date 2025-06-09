@@ -3,6 +3,7 @@
 import { AddTaskForm } from '@/components/Todo/add-task-form';
 import TodoList from '@/components/Todo/todo-list';
 import { Button } from '@/components/ui/button';
+import { useTodos } from '@/hooks/useTodos';
 import { faFilter, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useQuery } from 'convex/react';
@@ -11,9 +12,7 @@ import { api } from '../../../../convex/_generated/api';
 
 export default function Home() {
   const [showAddTask, setShowAddTask] = useState(false);
-  const todos = useQuery(api.todos.getTodos) || [];
-  const completedTodos = useQuery(api.todos.getCompletedTodos) || [];
-  const incompletedTodos = useQuery(api.todos.getIncompletedTodos) || [];
+  const { todos, completedTodos, incompletedTodos } = useTodos();
   const projects = useQuery(api.projects.getProjects) || [];
   const labels = useQuery(api.labels.getLabels) || [];
 

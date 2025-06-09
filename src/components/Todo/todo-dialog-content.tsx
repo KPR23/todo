@@ -21,7 +21,6 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import AddSubTodo from './add-subtodo';
-import { useState } from 'react';
 
 export default function TodoDialogContent({
   todo,
@@ -37,15 +36,13 @@ export default function TodoDialogContent({
       todoId: todo._id,
     }) || [];
 
-  const [showSubTodo, setShowSubTodo] = useState(false);
-
   return (
     <DialogContent className="sm:max-w-[600px]">
       <div className="flex flex-col sm:flex-row gap-6">
         <div className="flex-1 min-w-0">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {todo.taskName}
+              <h1 className="text-lg">{todo.taskName}</h1>
               {todo.isCompleted && (
                 <Badge className="bg-green-500/10 text-green-500 ml-2">
                   <FontAwesomeIcon icon={faCheckCircle} className="mr-1" />
@@ -66,11 +63,7 @@ export default function TodoDialogContent({
             {subtodos.length === 0 ? (
               <p className="text-sm text-muted-foreground">No subtasks</p>
             ) : (
-              <AddSubTodo
-                subTodos={subtodos}
-                showSubTodo={showSubTodo}
-                setShowSubTodo={setShowSubTodo}
-              />
+              <AddSubTodo subTodos={subtodos} />
             )}
           </div>
         </div>

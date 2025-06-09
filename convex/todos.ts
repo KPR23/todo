@@ -11,28 +11,6 @@ export const getTodos = authenticatedQuery({
   },
 });
 
-export const getCompletedTodos = authenticatedQuery({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db
-      .query('todos')
-      .filter((q) => q.eq(q.field('user'), ctx.user._id))
-      .filter((q) => q.eq(q.field('isCompleted'), true))
-      .collect();
-  },
-});
-
-export const getIncompletedTodos = authenticatedQuery({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db
-      .query('todos')
-      .filter((q) => q.eq(q.field('user'), ctx.user._id))
-      .filter((q) => q.eq(q.field('isCompleted'), false))
-      .collect();
-  },
-});
-
 export const createTodo = authenticatedMutation({
   args: {
     taskName: v.string(),
