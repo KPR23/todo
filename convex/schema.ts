@@ -14,6 +14,7 @@ export default defineSchema({
     taskName: v.string(),
     description: v.optional(v.string()),
     dueDate: v.number(),
+    dueTime: v.optional(v.number()),
     priority: v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
     isCompleted: v.boolean(),
     embedding: v.optional(v.array(v.float64())),
