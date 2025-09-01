@@ -13,13 +13,14 @@ import {
 	faClock,
 	faFolderOpen,
 	faHashtag,
+	faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "convex/react";
 import { format } from "date-fns";
 import { ChevronDownIcon } from "lucide-react";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -52,14 +53,7 @@ const formSchema = z.object({
 		invalid_type_error: "Due date must be a date.",
 		required_error: "Due date is required.",
 	}),
-	dueTime: z
-		.string()
-		.min(5)
-		.max(5)
-		.regex(/^\d{2}:\d{2}$/, {
-			message: "Due time must be in the format HH:mm.",
-		})
-		.optional(),
+	dueTime: z.string().optional(),
 	projectId: z.string({
 		invalid_type_error: "Project ID must be a string.",
 		required_error: "Project ID is required.",
@@ -79,6 +73,7 @@ export function AddTaskForm({
 	projects: Doc<"projects">[];
 	labels: Doc<"labels">[];
 }) {
+	const [showDueTime, setShowDueTime] = useState(false);
 	const projectId =
 		// myProjectId ||
 		// parentTask?.projectId ||
@@ -88,21 +83,12 @@ export function AddTaskForm({
 		// parentTask?.labelId ||
 		GET_STARTED_LABEL_ID as Id<"labels">;
 
-	const now = new Date();
-	const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-	const pad = (n: number) => n.toString().padStart(2, "0");
-	const isNextDay =
-		oneHourLater.getDate() !== now.getDate() ||
-		oneHourLater.getMonth() !== now.getMonth() ||
-		oneHourLater.getFullYear() !== now.getFullYear();
 	const defaultValues = {
 		taskName: "",
 		description: "",
 		priority: "low",
-		dueDate: isNextDay ? oneHourLater : now,
-		dueTime: `${pad(oneHourLater.getHours())}:${pad(
-			oneHourLater.getMinutes()
-		)}`,
+		dueDate: new Date(),
+		dueTime: "", // domyślnie pusty string, zawsze controlled
 		projectId,
 		labelId,
 	};
@@ -115,14 +101,33 @@ export function AddTaskForm({
 	const createTodo = useMutation(api.todos.createTodo);
 
 	function onSubmit(data: z.infer<typeof formSchema>) {
-		const { taskName, description, priority, projectId, labelId, dueDate } =
-			data;
+		const {
+			taskName,
+			description,
+			priority,
+			projectId,
+			labelId,
+			dueDate,
+			dueTime,
+		} = data;
+
+		let isDefaultTime = false;
+
+		const finalDueDate = new Date(dueDate);
+		if (dueTime && dueTime !== "") {
+			const [hours, minutes] = dueTime.split(":").map(Number);
+			finalDueDate.setHours(hours || 0, minutes || 0, 0);
+		} else {
+			isDefaultTime = true;
+			finalDueDate.setHours(23, 59, 59);
+		}
 
 		createTodo({
 			taskName,
 			description: description || undefined,
 			priority,
-			dueDate: dueDate.getTime(),
+			dueDate: finalDueDate.getTime(),
+			isDefaultTime,
 			projectId: projectId as Id<"projects">,
 			labelId: labelId as Id<"labels">,
 		})
@@ -135,7 +140,6 @@ export function AddTaskForm({
 				toast.error("Failed to create task", { description: error.message });
 			});
 	}
-
 	return (
 		<Card className="flex gap-2 p-4">
 			<Form {...form}>
@@ -233,16 +237,38 @@ export function AddTaskForm({
 									<span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
 										<FontAwesomeIcon
 											icon={faClock}
-											className="h-4 w-4 text-muted-foreground"
+											className={`h-4 w-4 ${
+												showDueTime
+													? "text-muted-foreground"
+													: "text-muted-foreground/[.45]"
+											}`}
+											onClick={() => setShowDueTime(!showDueTime)}
 										/>
 									</span>
-									<Input
-										type="time"
-										id="time-picker"
-										step="1"
-										className="bg-background pl-10 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-										{...field}
-									/>
+									{showDueTime ? (
+										<Input
+											type="time"
+											id="time-picker"
+											step="60"
+											className="bg-background pl-9 pr-2 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+											value={field.value ?? ""}
+											onChange={field.onChange}
+										/>
+									) : (
+										<Button
+											variant={"outline"}
+											className={cn(
+												"text-left font-normal ",
+												!field.value && "text-muted-foreground"
+											)}
+											onClick={() => setShowDueTime(true)}
+										>
+											<FontAwesomeIcon
+												icon={faPlus}
+												className={`pl-6 h-4 w-4`}
+											/>
+										</Button>
+									)}
 								</FormItem>
 							)}
 						/>

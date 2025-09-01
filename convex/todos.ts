@@ -17,27 +17,19 @@ export const createTodo = authenticatedMutation({
 		description: v.optional(v.string()),
 		priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
 		dueDate: v.number(),
-		dueTime: v.optional(v.string()),
+		isDefaultTime: v.boolean(),
 		projectId: v.id("projects"),
 		labelId: v.id("labels"),
 		embedding: v.optional(v.array(v.float64())),
 	},
 	handler: async (ctx, args) => {
-		let dueDateTime = args.dueDate;
-		if (args.dueTime) {
-			const [hours, minutes] = args.dueTime.split(":").map(Number);
-			const dueDateObj = new Date(args.dueDate);
-			dueDateObj.setHours(hours, minutes, 0, 0);
-			dueDateTime = dueDateObj.getTime();
-		}
-
 		await ctx.db.insert("todos", {
 			user: ctx.user._id,
 			taskName: args.taskName,
 			description: args.description,
 			priority: args.priority,
 			dueDate: args.dueDate,
-			dueTime: dueDateTime,
+			isDefaultTime: args.isDefaultTime,
 			projectId: args.projectId,
 			labelId: args.labelId,
 			embedding: args.embedding,

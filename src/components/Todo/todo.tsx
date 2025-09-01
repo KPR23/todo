@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import {
 	faBolt,
 	faCalendarDays,
+	faClock,
 	faEllipsisVertical,
 	faFolderOpen,
 	faHashtag,
@@ -135,15 +136,31 @@ export default function Todo({ todo }: { todo: Doc<"todos"> }) {
 								{todo.priority}
 							</Badge>
 						)}
-						<Badge className="bg-muted-foreground/10 text-muted-foreground flex justify-center items-center gap-1">
-							{todo.dueDate < Date.now() && (
-								<>
-									<FontAwesomeIcon icon={faCalendarDays} />
-									<span className="text-red-500">Overdue</span>
-								</>
-							)}
-							{todo.dueDate && format(todo.dueDate, "MMM d, yyyy")}
-						</Badge>
+
+						{todo.dueDate && todo.dueDate < Date.now() ? (
+							<Badge className="bg-red-500/10 text-red-500 flex justify-center items-center gap-1">
+								<FontAwesomeIcon icon={faCalendarDays} />
+								{format(todo.dueDate, "dd/MM/yyyy")}
+							</Badge>
+						) : (
+							<Badge className="bg-muted-foreground/10 text-muted-foreground flex justify-center items-center gap-1">
+								<FontAwesomeIcon icon={faCalendarDays} />
+								{format(todo.dueDate, "dd/MM/yyyy")}
+							</Badge>
+						)}
+						{todo.dueDate &&
+							!todo.isDefaultTime &&
+							(todo.dueDate < Date.now() ? (
+								<Badge className="bg-red-500/10 text-red-500 flex justify-center items-center gap-1">
+									<FontAwesomeIcon icon={faClock} />
+									{format(todo.dueDate, "HH:mm")}
+								</Badge>
+							) : (
+								<Badge className="bg-muted-foreground/10 text-muted-foreground flex justify-center items-center gap-1">
+									<FontAwesomeIcon icon={faClock} />
+									{format(todo.dueDate, "HH:mm")}
+								</Badge>
+							))}
 					</div>
 				</Card>
 			</DialogTrigger>
