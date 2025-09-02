@@ -1,4 +1,5 @@
 import {
+	faBusinessTime,
 	faCalendarDays,
 	faCircleQuestion,
 	faComment,
@@ -41,9 +42,9 @@ export const projects = [
 		icon: faHashtag,
 	},
 	{
-		name: "Work sessions",
-		url: "/work-sessions",
-		icon: faHashtag,
+		name: "Time Tracking",
+		url: "/time-tracking",
+		icon: faBusinessTime,
 	},
 ];
 
