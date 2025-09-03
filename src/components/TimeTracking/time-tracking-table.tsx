@@ -84,10 +84,11 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { formatDuration, formatPLN } from "@/lib/format-helpers";
 import { cn } from "@/lib/utils";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
+import { Doc, Id } from "../../../convex/_generated/dataModel";
 
 type Item = {
 	id: Id<"workSessions">;
@@ -98,6 +99,11 @@ type Item = {
 	wage: number;
 	duration: number;
 	formattedDuration: string;
+};
+
+type TimeTrackingTableProps = {
+	rawSessions: Doc<"workSessions">[];
+	companies: Doc<"company">[];
 };
 
 const multiColumnFilterFn: FilterFn<Item> = (row, columnId, filterValue) => {
@@ -197,10 +203,7 @@ const columns: ColumnDef<Item>[] = [
 		},
 		cell: ({ row }) => {
 			const amount = parseFloat(row.getValue("wage"));
-			const formatted = new Intl.NumberFormat("pl-PL", {
-				style: "currency",
-				currency: "PLN",
-			}).format(amount);
+			const formatted = formatPLN(amount);
 			return <div className="whitespace-nowrap">{formatted}</div>;
 		},
 		size: 120,
@@ -214,7 +217,10 @@ const columns: ColumnDef<Item>[] = [
 	},
 ];
 
-export default function TimeTrackingTable() {
+export default function TimeTrackingTable({
+	rawSessions,
+	companies,
+}: TimeTrackingTableProps) {
 	const id = useId();
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -225,20 +231,10 @@ export default function TimeTrackingTable() {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [sorting, setSorting] = useState<SortingState>([]);
 
-	const rawSessionsQuery = useQuery(api.workSessions.getSessions);
-	const companiesQuery = useQuery(api.company.getCompany);
 	const deleteSession = useMutation(api.workSessions.deleteSession);
 	const deleteMultipleSessions = useMutation(
 		api.workSessions.deleteMultipleSessions
 	);
-
-	const rawSessions = useMemo(() => {
-		return rawSessionsQuery || [];
-	}, [rawSessionsQuery]);
-
-	const companies = useMemo(() => {
-		return companiesQuery || [];
-	}, [companiesQuery]);
 
 	const companyMap = useMemo(() => {
 		const map = new Map();
@@ -254,20 +250,7 @@ export default function TimeTrackingTable() {
 			const startTime = new Date(session.startTime);
 			const endTime = new Date(session.endTime);
 			const durationMs = endTime.getTime() - startTime.getTime();
-			const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
-			const durationMinutes = Math.floor(
-				(durationMs % (1000 * 60 * 60)) / (1000 * 60)
-			);
-
-			const formatDuration = () => {
-				if (durationHours > 0 && durationMinutes > 0) {
-					return `${durationHours}h ${durationMinutes}min`;
-				} else if (durationHours > 0) {
-					return `${durationHours}h`;
-				} else {
-					return `${durationMinutes}min`;
-				}
-			};
+			const minutes = durationMs / 1000 / 60;
 
 			const formatDate = () => {
 				if (startTime.toDateString() === endTime.toDateString()) {
@@ -295,7 +278,7 @@ export default function TimeTrackingTable() {
 				company: company?.name || "Unknown Company",
 				duration: durationMs / (1000 * 60 * 60),
 				wage: wage,
-				formattedDuration: formatDuration(),
+				formattedDuration: formatDuration(minutes),
 			};
 		});
 	}, [rawSessions, companyMap]);
