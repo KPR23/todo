@@ -45,22 +45,20 @@ const formSchema = z.object({
 		message: "Task name must be at least 2 characters.",
 	}),
 	description: z.string().optional(),
-	priority: z.enum(["low", "medium", "high"], {
-		invalid_type_error: "Priority must be low, medium, or high.",
-		required_error: "Priority is required.",
-	}),
+	priority: z
+		.enum(["low", "medium", "high"])
+		.refine((val) => ["low", "medium", "high"].includes(val), {
+			message: "Priority must be low, medium, or high.",
+		}),
 	dueDate: z.date({
-		invalid_type_error: "Due date must be a date.",
-		required_error: "Due date is required.",
+		message: "Due date must be a valid date.",
 	}),
 	dueTime: z.string().optional(),
 	projectId: z.string({
-		invalid_type_error: "Project ID must be a string.",
-		required_error: "Project ID is required.",
+		message: "Project ID is required.",
 	}),
 	labelId: z.string({
-		invalid_type_error: "Label ID must be a string.",
-		required_error: "Label ID is required.",
+		message: "Label ID is required.",
 	}),
 });
 
