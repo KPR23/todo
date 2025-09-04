@@ -15,20 +15,15 @@ export function formatDuration(totalMinutes: number) {
 export function formatTrend(totalMinutes: number) {
 	const isPositive = totalMinutes >= 0;
 	const absoluteMinutes = Math.abs(totalMinutes);
-	const hours = Math.floor(absoluteMinutes / 60);
-	const minutes = Math.round(absoluteMinutes % 60);
+	const rounded = Math.round(absoluteMinutes);
+	const hours = Math.floor(rounded / 60);
+	const minutes = rounded % 60;
 
 	const sign = isPositive ? "+" : "-";
 
-	if (hours > 0) {
-		return `${sign}${hours}h`;
-	} else if (hours > 0) {
-		return `${sign}${hours}h`;
-	} else if (minutes > 0) {
-		return `${sign}${minutes}min`;
-	} else {
-		return "0min";
-	}
+	if (hours > 0) return `${sign}${hours}h`;
+	if (minutes > 0) return `${sign}${minutes}min`;
+	return "0min";
 }
 
 export function formatPLN(amount: number) {
@@ -42,9 +37,25 @@ export function formatPLN(amount: number) {
 export function totalMinutes(monthSessions: Doc<"workSessions">[]) {
 	return monthSessions.reduce((sum, session) => {
 		const start = new Date(session.startTime);
+		if (!session.startTime || !Number.isFinite(start.getTime())) {
+			return sum;
+		}
+
 		const end = new Date(session.endTime);
+		if (!session.endTime || !Number.isFinite(end.getTime())) {
+			return sum;
+		}
+
 		const durationMs = end.getTime() - start.getTime();
+		if (durationMs <= 0) {
+			return sum;
+		}
+
 		const minutes = durationMs / 1000 / 60;
+		if (!Number.isFinite(minutes) || minutes < 0) {
+			return sum;
+		}
+
 		return sum + minutes;
 	}, 0);
 }
@@ -55,11 +66,32 @@ export function totalEarnings(
 ) {
 	return monthSessions.reduce((sum, session) => {
 		const start = new Date(session.startTime);
+		if (!session.startTime || !Number.isFinite(start.getTime())) {
+			return sum;
+		}
+
 		const end = new Date(session.endTime);
+		if (!session.endTime || !Number.isFinite(end.getTime())) {
+			return sum;
+		}
+
 		const durationMs = end.getTime() - start.getTime();
+		if (durationMs <= 0) {
+			return sum;
+		}
+
 		const hours = durationMs / 1000 / 60 / 60;
-		const hourlyRate =
-			companies.find((c) => c._id === session.companyId)?.rate || 0;
+		if (!Number.isFinite(hours) || hours < 0) {
+			return sum;
+		}
+
+		const company = companies.find((c) => c._id === session.companyId);
+		const hourlyRate = company?.rate;
+
+		if (hourlyRate === undefined || !Number.isFinite(hourlyRate)) {
+			return sum;
+		}
+
 		return sum + hours * hourlyRate;
 	}, 0);
 }

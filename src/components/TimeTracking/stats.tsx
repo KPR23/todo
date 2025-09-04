@@ -30,15 +30,17 @@ type StatsProps = {
 
 export default function Stats({ rawSessions, companies }: StatsProps) {
 	const now = new Date();
-	const lastMonth = new Date();
-	lastMonth.setMonth(lastMonth.getMonth() - 1);
+	// const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
 	const getSessionsForMonth = (
 		sessions: Doc<"workSessions">[],
 		monthOffset: number = 0
 	) => {
-		const targetDate = new Date();
-		targetDate.setMonth(targetDate.getMonth() + monthOffset);
+		const targetDate = new Date(
+			now.getFullYear(),
+			now.getMonth() + monthOffset,
+			1
+		);
 
 		return sessions.filter((session) => {
 			const start = new Date(session.startTime);
@@ -151,14 +153,101 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 		return streak;
 	};
 
-	const workStreak = calculateWorkStreak(monthSessions);
-	const workStreakFormatted = workDaysStreakFormat(
-		calculateWorkStreak(monthSessions)
-	);
-	const lastMonthWorkStreak = calculateWorkStreak(lastMonthSessions);
+	const calculateLongestStreakInMonth = (sessions: Doc<"workSessions">[]) => {
+		if (sessions.length === 0) return 0;
 
-	const workStreakTrend = workStreak - lastMonthWorkStreak;
-	console.log(workStreakTrend);
+		// Get all work days in the month, sorted chronologically
+		const workDays = Array.from(
+			new Set(
+				sessions.map(
+					(session) => new Date(session.startTime).toISOString().split("T")[0]
+				)
+			)
+		).sort();
+
+		if (workDays.length === 0) return 0;
+
+		let maxStreak = 1;
+		let currentStreak = 1;
+
+		for (let i = 1; i < workDays.length; i++) {
+			const currentDay = new Date(workDays[i]);
+			const previousDay = new Date(workDays[i - 1]);
+
+			// Check if current day is consecutive to previous day
+			const dayDifference = Math.floor(
+				(currentDay.getTime() - previousDay.getTime()) / (1000 * 60 * 60 * 24)
+			);
+
+			if (dayDifference === 1) {
+				currentStreak++;
+				maxStreak = Math.max(maxStreak, currentStreak);
+			} else {
+				currentStreak = 1;
+			}
+		}
+
+		return maxStreak;
+	};
+
+	const workStreak = calculateWorkStreak(monthSessions);
+	const workStreakFormatted = workDaysStreakFormat(workStreak);
+	const lastMonthLongestStreak =
+		calculateLongestStreakInMonth(lastMonthSessions);
+
+	// Calculate percentage changes
+	const salaryPercentChange =
+		totalEarningsLastMonth === 0
+			? totalEarningsThisMonth > 0
+				? 100
+				: 0
+			: ((totalEarningsThisMonth - totalEarningsLastMonth) /
+					totalEarningsLastMonth) *
+			  100;
+
+	const hoursPercentChange =
+		totalMinutesLastMonth === 0
+			? totalMinutesThisMonth > 0
+				? 100
+				: 0
+			: ((totalMinutesThisMonth - totalMinutesLastMonth) /
+					totalMinutesLastMonth) *
+			  100;
+
+	const longestDayPercentChange =
+		longestDayLastMonth === 0
+			? longestDay > 0
+				? 100
+				: 0
+			: ((longestDay - longestDayLastMonth) / longestDayLastMonth) * 100;
+
+	const workStreakPercentChange =
+		lastMonthLongestStreak === 0
+			? workStreak > 0
+				? 100
+				: 0
+			: ((workStreak - lastMonthLongestStreak) / lastMonthLongestStreak) * 100;
+
+	const formatPercentage = (percent: number) => {
+		if (percent === 0) return "0%";
+		const sign = percent > 0 ? "+" : "";
+		const formatted =
+			percent % 1 === 0 ? percent.toString() : percent.toFixed(1);
+		return `${sign}${formatted}%`;
+	};
+
+	const getPercentageColor = (percent: number) => {
+		if (percent > 0) return "text-chart-2";
+		if (percent < 0) return "text-chart-5";
+		return "text-chart-3";
+	};
+
+	const getArrowRotation = (percent: number) => {
+		if (percent > 0) return "rotate-[45deg]";
+		if (percent < 0) return "rotate-[135deg]";
+		return "rotate-[90deg]";
+	};
+
 	return (
 		<div className="grid grid-cols-4 gap-4">
 			<Card>
@@ -172,33 +261,37 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 					<p className="text-2xl font-bold">
 						{formatPLN(totalEarningsThisMonth)}
 					</p>
-					<Badge variant={"outline"}>
-						{salaryTrend > 0 ? (
-							<div className="text-chart-2">
-								+{formatPLN(salaryTrend)}{" "}
-								<FontAwesomeIcon
-									icon={faArrowUp}
-									className="size-4 rotate-[45deg]"
-								/>
+					<HoverCard>
+						<HoverCardTrigger asChild>
+							<Badge variant={"outline"}>
+								<div className={getPercentageColor(salaryPercentChange)}>
+									{formatPercentage(salaryPercentChange)}{" "}
+									<FontAwesomeIcon
+										icon={faArrowUp}
+										className={`size-4 ${getArrowRotation(
+											salaryPercentChange
+										)}`}
+									/>
+								</div>
+							</Badge>
+						</HoverCardTrigger>
+						<HoverCardContent className="w-80">
+							<div className="space-y-2">
+								<h4 className="text-sm font-semibold">Salary Comparison</h4>
+								<div className="space-y-1 text-sm">
+									<p>This month: {formatPLN(totalEarningsThisMonth)}</p>
+									<p>Last month: {formatPLN(totalEarningsLastMonth)}</p>
+									<p>
+										Difference: {salaryTrend > 0 ? "+" : ""}
+										{formatPLN(salaryTrend)}
+									</p>
+								</div>
+								<p className="text-xs text-muted-foreground">
+									Percentage change compared to previous month
+								</p>
 							</div>
-						) : salaryTrend < 0 ? (
-							<div className="text-chart-5">
-								{formatPLN(salaryTrend)}{" "}
-								<FontAwesomeIcon
-									icon={faArrowUp}
-									className="size-4 rotate-[135deg]"
-								/>
-							</div>
-						) : (
-							<div className="text-chart-3">
-								{formatPLN(salaryTrend)}{" "}
-								<FontAwesomeIcon
-									icon={faArrowUp}
-									className="size-4 rotate-[90deg]"
-								/>
-							</div>
-						)}
-					</Badge>
+						</HoverCardContent>
+					</HoverCard>
 				</CardContent>
 			</Card>
 			<Card>
@@ -213,44 +306,27 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 					<HoverCard>
 						<HoverCardTrigger asChild>
 							<Badge variant={"outline"}>
-								{hourTrend > 0 ? (
-									<div className="text-chart-2">
-										{formattedHourTrend}{" "}
-										<FontAwesomeIcon
-											icon={faArrowUp}
-											className="size-4 rotate-[45deg]"
-										/>
-									</div>
-								) : hourTrend < 0 ? (
-									<div className="text-chart-5">
-										{formattedHourTrend}{" "}
-										<FontAwesomeIcon
-											icon={faArrowUp}
-											className="size-4 rotate-[135deg]"
-										/>
-									</div>
-								) : (
-									<div className="text-chart-3">
-										0h{" "}
-										<FontAwesomeIcon
-											icon={faArrowUp}
-											className="size-4 rotate-[90deg]"
-										/>
-									</div>
-								)}
+								<div className={getPercentageColor(hoursPercentChange)}>
+									{formatPercentage(hoursPercentChange)}{" "}
+									<FontAwesomeIcon
+										icon={faArrowUp}
+										className={`size-4 ${getArrowRotation(hoursPercentChange)}`}
+									/>
+								</div>
 							</Badge>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-80">
-							<div className="flex justify-between gap-4">
-								<div className="space-y-1">
-									<h4 className="text-sm font-semibold">@nextjs</h4>
-									<p className="text-sm">
-										The React Framework – created and maintained by @vercel.
-									</p>
-									<div className="text-muted-foreground text-xs">
-										Joined December 2021
-									</div>
+							<div className="space-y-2">
+								<h4 className="text-sm font-semibold">Hours Comparison</h4>
+								<div className="space-y-1 text-sm">
+									<p>This month: {totalTime}</p>
+									<p>Last month: {totalTimeLastMonth}</p>
+									<p>Difference: {formattedHourTrend}</p>
 								</div>
+								<p className="text-xs text-muted-foreground">
+									Percentage change in total working hours compared to previous
+									month
+								</p>
 							</div>
 						</HoverCardContent>
 					</HoverCard>
@@ -265,33 +341,37 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 				</CardHeader>
 				<CardContent className="flex justify-between items-center">
 					<p className="text-2xl font-bold">{longestDayFormatted}</p>
-					<Badge variant={"outline"}>
-						{longestDayTrend > 0 ? (
-							<div className="text-chart-2">
-								{longestDayTrendFormatted}{" "}
-								<FontAwesomeIcon
-									icon={faArrowUp}
-									className="size-4 rotate-[45deg]"
-								/>
+					<HoverCard>
+						<HoverCardTrigger asChild>
+							<Badge variant={"outline"}>
+								<div className={getPercentageColor(longestDayPercentChange)}>
+									{formatPercentage(longestDayPercentChange)}{" "}
+									<FontAwesomeIcon
+										icon={faArrowUp}
+										className={`size-4 ${getArrowRotation(
+											longestDayPercentChange
+										)}`}
+									/>
+								</div>
+							</Badge>
+						</HoverCardTrigger>
+						<HoverCardContent className="w-80">
+							<div className="space-y-2">
+								<h4 className="text-sm font-semibold">
+									Longest Day Comparison
+								</h4>
+								<div className="space-y-1 text-sm">
+									<p>This month: {longestDayFormatted}</p>
+									<p>Last month: {formatDuration(longestDayLastMonth)}</p>
+									<p>Difference: {longestDayTrendFormatted}</p>
+								</div>
+								<p className="text-xs text-muted-foreground">
+									Percentage change in longest working day compared to previous
+									month
+								</p>
 							</div>
-						) : longestDayTrend < 0 ? (
-							<div className="text-chart-5">
-								{longestDayTrendFormatted}{" "}
-								<FontAwesomeIcon
-									icon={faArrowUp}
-									className="size-4 rotate-[135deg]"
-								/>
-							</div>
-						) : (
-							<div className="text-chart-3">
-								{longestDayTrendFormatted}{" "}
-								<FontAwesomeIcon
-									icon={faArrowUp}
-									className="size-4 rotate-[90deg]"
-								/>
-							</div>
-						)}
-					</Badge>
+						</HoverCardContent>
+					</HoverCard>
 				</CardContent>
 			</Card>
 			<Card>
@@ -299,8 +379,45 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 					<CardTitle>Work streak</CardTitle>
 					<CardDescription>Consecutive work days</CardDescription>
 				</CardHeader>
-				<CardContent>
+				<CardContent className="flex justify-between items-center">
 					<p className="text-2xl font-bold">{workStreakFormatted}</p>
+					<HoverCard>
+						<HoverCardTrigger asChild>
+							<Badge variant={"outline"}>
+								<div className={getPercentageColor(workStreakPercentChange)}>
+									{formatPercentage(workStreakPercentChange)}{" "}
+									<FontAwesomeIcon
+										icon={faArrowUp}
+										className={`size-4 ${getArrowRotation(
+											workStreakPercentChange
+										)}`}
+									/>
+								</div>
+							</Badge>
+						</HoverCardTrigger>
+						<HoverCardContent className="w-80">
+							<div className="space-y-2">
+								<h4 className="text-sm font-semibold">
+									Work Streak Comparison
+								</h4>
+								<div className="space-y-1 text-sm">
+									<p>Current streak: {workStreakFormatted}</p>
+									<p>
+										{"Last month's longest: "}
+										{workDaysStreakFormat(lastMonthLongestStreak)}
+									</p>
+									<p>
+										Difference:{" "}
+										{workStreak - lastMonthLongestStreak > 0 ? "+" : ""}
+										{workStreak - lastMonthLongestStreak} days
+									</p>
+								</div>
+								<p className="text-xs text-muted-foreground">
+									Current streak vs longest streak from previous month
+								</p>
+							</div>
+						</HoverCardContent>
+					</HoverCard>
 				</CardContent>
 			</Card>
 		</div>
