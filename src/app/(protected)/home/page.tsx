@@ -24,7 +24,7 @@ export default function Home() {
 					<div className="flex gap-2">
 						<Button onClick={() => setShowAddTask(true)} disabled={showAddTask}>
 							<PlusIcon className="w-4 h-4" />
-							Add Task
+							Add task
 						</Button>
 						<Button variant="outline">
 							<FilterIcon className="w-4 h-4" />

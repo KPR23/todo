@@ -379,7 +379,7 @@ export function AddTaskForm({
 							Cancel
 						</Button>
 						<Button className="w-full" type="submit">
-							Add Task
+							Add task
 						</Button>
 					</CardFooter>
 				</form>

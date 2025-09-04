@@ -1,10 +1,16 @@
 "use client";
 
+import AddSessionDialog from "@/components/TimeTracking/add-session";
 import Stats from "@/components/TimeTracking/stats";
 import TimeTrackingTable from "@/components/TimeTracking/time-tracking-table";
-import { Button } from "@/components/ui/button";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { useQuery } from "convex/react";
-import { FilterIcon, PlusIcon } from "lucide-react";
 import { api } from "../../../../convex/_generated/api";
 
 export default function TimeTrackingPage() {
@@ -17,14 +23,18 @@ export default function TimeTrackingPage() {
 				<div className="flex justify-between items-center">
 					<h1 className="text-lg md:text-2xl font-semibold">Time Tracking</h1>
 					<div className="flex gap-2">
-						<Button>
-							<PlusIcon className="w-4 h-4" />
-							Add Task
-						</Button>
-						<Button variant="outline">
-							<FilterIcon className="w-4 h-4" />
-							Filters
-						</Button>
+						<AddSessionDialog />
+						<Select>
+							<SelectTrigger>
+								<SelectValue placeholder="Change month" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">All</SelectItem>
+								<SelectItem value="today">Today</SelectItem>
+								<SelectItem value="this_week">This week</SelectItem>
+								<SelectItem value="this_month">This month</SelectItem>
+							</SelectContent>
+						</Select>
 					</div>
 				</div>
 				<hr className="my-2 w-full border-t border-zinc-950/10 dark:border-white/10" />
