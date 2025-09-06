@@ -20,8 +20,8 @@ import {
 } from "@/lib/format-helpers";
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Doc } from "../../../convex/_generated/dataModel";
-import { Badge } from "../ui/badge";
+import { Doc } from "../../../../../convex/_generated/dataModel";
+import { Badge } from "../../../../components/ui/badge";
 
 type StatsProps = {
 	rawSessions: Doc<"workSessions">[];
@@ -156,7 +156,6 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 	const calculateLongestStreakInMonth = (sessions: Doc<"workSessions">[]) => {
 		if (sessions.length === 0) return 0;
 
-		// Get all work days in the month, sorted chronologically
 		const workDays = Array.from(
 			new Set(
 				sessions.map(
@@ -174,7 +173,6 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 			const currentDay = new Date(workDays[i]);
 			const previousDay = new Date(workDays[i - 1]);
 
-			// Check if current day is consecutive to previous day
 			const dayDifference = Math.floor(
 				(currentDay.getTime() - previousDay.getTime()) / (1000 * 60 * 60 * 24)
 			);
@@ -195,7 +193,6 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 	const lastMonthLongestStreak =
 		calculateLongestStreakInMonth(lastMonthSessions);
 
-	// Calculate percentage changes
 	const salaryPercentChange =
 		totalEarningsLastMonth === 0
 			? totalEarningsThisMonth > 0
@@ -252,6 +249,44 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 		<div className="grid grid-cols-4 gap-4">
 			<Card>
 				<CardHeader>
+					<CardTitle>Total hours</CardTitle>
+					<CardDescription>
+						{now.toLocaleString("en-GB", { month: "long", year: "numeric" })}
+					</CardDescription>
+				</CardHeader>
+				<CardContent className="flex justify-between items-center">
+					<p className="text-2xl font-bold">{totalTime}</p>
+					<HoverCard>
+						<HoverCardTrigger asChild>
+							<Badge variant={"outline"}>
+								<div className={getPercentageColor(hoursPercentChange)}>
+									{formatPercentage(hoursPercentChange)}{" "}
+									<FontAwesomeIcon
+										icon={faArrowUp}
+										className={`size-4 ${getArrowRotation(hoursPercentChange)}`}
+									/>
+								</div>
+							</Badge>
+						</HoverCardTrigger>
+						<HoverCardContent className="w-80">
+							<div className="space-y-2">
+								<h4 className="text-sm font-semibold">Hours Comparison</h4>
+								<div className="space-y-1 text-sm">
+									<p>This month: {totalTime}</p>
+									<p>Last month: {totalTimeLastMonth}</p>
+									<p>Difference: {formattedHourTrend}</p>
+								</div>
+								<p className="text-xs text-muted-foreground">
+									Percentage change in total working hours compared to previous
+									month
+								</p>
+							</div>
+						</HoverCardContent>
+					</HoverCard>
+				</CardContent>
+			</Card>
+			<Card>
+				<CardHeader>
 					<CardTitle>Salary</CardTitle>
 					<CardDescription>
 						Across {companiesWorkedThisMonthDisplay()}
@@ -288,44 +323,6 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 								</div>
 								<p className="text-xs text-muted-foreground">
 									Percentage change compared to previous month
-								</p>
-							</div>
-						</HoverCardContent>
-					</HoverCard>
-				</CardContent>
-			</Card>
-			<Card>
-				<CardHeader>
-					<CardTitle>Total hours</CardTitle>
-					<CardDescription>
-						{now.toLocaleString("en-GB", { month: "long", year: "numeric" })}
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="flex justify-between items-center">
-					<p className="text-2xl font-bold">{totalTime}</p>
-					<HoverCard>
-						<HoverCardTrigger asChild>
-							<Badge variant={"outline"}>
-								<div className={getPercentageColor(hoursPercentChange)}>
-									{formatPercentage(hoursPercentChange)}{" "}
-									<FontAwesomeIcon
-										icon={faArrowUp}
-										className={`size-4 ${getArrowRotation(hoursPercentChange)}`}
-									/>
-								</div>
-							</Badge>
-						</HoverCardTrigger>
-						<HoverCardContent className="w-80">
-							<div className="space-y-2">
-								<h4 className="text-sm font-semibold">Hours Comparison</h4>
-								<div className="space-y-1 text-sm">
-									<p>This month: {totalTime}</p>
-									<p>Last month: {totalTimeLastMonth}</p>
-									<p>Difference: {formattedHourTrend}</p>
-								</div>
-								<p className="text-xs text-muted-foreground">
-									Percentage change in total working hours compared to previous
-									month
 								</p>
 							</div>
 						</HoverCardContent>

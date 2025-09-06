@@ -1,15 +1,8 @@
 "use client";
 
-import AddSessionDialog from "@/components/TimeTracking/add-session";
-import Stats from "@/components/TimeTracking/stats";
-import TimeTrackingTable from "@/components/TimeTracking/time-tracking-table";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import Stats from "@/app/(protected)/time-tracking/_components/stats";
+import TimeTrackingTable from "@/app/(protected)/time-tracking/_components/time-tracking-table";
+import DateRangePicker from "@/components/ui/date-range-picker";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 
@@ -23,18 +16,7 @@ export default function TimeTrackingPage() {
 				<div className="flex justify-between items-center">
 					<h1 className="text-lg md:text-2xl font-semibold">Time Tracking</h1>
 					<div className="flex gap-2">
-						<AddSessionDialog />
-						<Select>
-							<SelectTrigger>
-								<SelectValue placeholder="Change month" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">All</SelectItem>
-								<SelectItem value="today">Today</SelectItem>
-								<SelectItem value="this_week">This week</SelectItem>
-								<SelectItem value="this_month">This month</SelectItem>
-							</SelectContent>
-						</Select>
+						<DateRangePicker />
 					</div>
 				</div>
 				<hr className="my-2 w-full border-t border-zinc-950/10 dark:border-white/10" />
