@@ -21,6 +21,7 @@ export function formatTrend(totalMinutes: number) {
 
 	const sign = isPositive ? "+" : "-";
 
+	if (hours > 0 && minutes > 0) return `${sign}${hours}h ${minutes}min`;
 	if (hours > 0) return `${sign}${hours}h`;
 	if (minutes > 0) return `${sign}${minutes}min`;
 	return "0min";

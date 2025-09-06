@@ -87,8 +87,9 @@ import {
 import { formatDuration, formatPLN } from "@/lib/format-helpers";
 import { cn } from "@/lib/utils";
 import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { Doc, Id } from "../../../convex/_generated/dataModel";
+import { api } from "../../../../../convex/_generated/api";
+import { Doc, Id } from "../../../../../convex/_generated/dataModel";
+import AddSessionDialog from "./add-session";
 
 type Item = {
 	id: Id<"workSessions">;
@@ -539,14 +540,7 @@ export default function TimeTrackingTable({
 						</AlertDialog>
 					)}
 					{/* Add session button */}
-					<Button className="ml-auto" variant="outline">
-						<PlusIcon
-							className="-ms-1 opacity-60"
-							size={16}
-							aria-hidden="true"
-						/>
-						Add session
-					</Button>
+					<AddSessionDialog />
 				</div>
 			</div>
 

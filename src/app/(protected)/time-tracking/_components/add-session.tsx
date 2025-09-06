@@ -1,13 +1,5 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
-import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
-import BigDateTimePicker from "../ui/big-datetime-picker";
-import { Button } from "../ui/button";
+import BigDateTimePicker from "@/components/ui/big-datetime-picker";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -15,7 +7,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "../ui/dialog";
+} from "@/components/ui/dialog";
 import {
 	Form,
 	FormControl,
@@ -23,14 +15,23 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "../ui/form";
+} from "@/components/ui/form";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "../ui/select";
+} from "@/components/ui/select";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "convex/react";
+import { PlusIcon } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { api } from "../../../../../convex/_generated/api";
+import { Id } from "../../../../../convex/_generated/dataModel";
 
 const formSchema = z
 	.object({
@@ -90,7 +91,10 @@ export default function AddSessionDialog() {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button>Add Session</Button>
+				<Button className="ml-auto">
+					<PlusIcon className="-ms-1 opacity-60" size={16} aria-hidden="true" />
+					Add session
+				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-2xl">
 				<DialogHeader>
