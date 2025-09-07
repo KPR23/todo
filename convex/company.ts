@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { authenticatedMutation, authenticatedQuery } from "./lib/withUser";
 
-export const getCompany = authenticatedQuery({
+export const getCompanies = authenticatedQuery({
 	args: {},
 	handler: async (ctx) => {
 		return await ctx.db

@@ -47,7 +47,7 @@ const formSchema = z
 export default function AddSessionDialog() {
 	const [open, setOpen] = useState(false);
 	const addSession = useMutation(api.workSessions.createSession);
-	const companies = useQuery(api.company.getCompany) || [];
+	const companies = useQuery(api.company.getCompanies) || [];
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
