@@ -3,8 +3,8 @@
 import Stats from "@/app/(protected)/time-tracking/_components/stats";
 import TimeTrackingTable from "@/app/(protected)/time-tracking/_components/time-tracking-table";
 import DateRangePicker from "@/components/ui/date-range-picker";
+import { getSessionsForDateRange } from "@/lib/helper-functions";
 import { useQuery } from "convex/react";
-import { endOfDay, startOfDay } from "date-fns";
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { api } from "../../../../convex/_generated/api";
@@ -21,21 +21,11 @@ export default function TimeTrackingPage() {
 	const filteredSessions = useMemo(() => {
 		if (!rawSessions) return [];
 
-		if (
-			!dateRange ||
-			!dateRange.from ||
-			!dateRange.to ||
-			rawSessions.length === 0
-		)
+		if (!dateRange?.from || !dateRange?.to) {
 			return rawSessions;
+		}
 
-		const startDate = startOfDay(dateRange.from);
-		const endDate = endOfDay(dateRange.to);
-
-		return rawSessions.filter((session) => {
-			const sessionDate = new Date(session.startTime);
-			return sessionDate >= startDate && sessionDate <= endDate;
-		});
+		return getSessionsForDateRange(rawSessions, dateRange.from, dateRange.to);
 	}, [rawSessions, dateRange]);
 
 	return (
@@ -49,7 +39,11 @@ export default function TimeTrackingPage() {
 				</div>
 				<hr className="my-2 w-full border-t border-zinc-950/10 dark:border-white/10" />
 				<div className="flex flex-col gap-6">
-					<Stats rawSessions={filteredSessions} companies={companies} />
+					<Stats
+						rawSessions={rawSessions || []}
+						companies={companies}
+						dateRange={dateRange}
+					/>
 					<TimeTrackingTable
 						rawSessions={filteredSessions}
 						companies={companies}
