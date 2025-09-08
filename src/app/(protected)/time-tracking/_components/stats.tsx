@@ -12,50 +12,166 @@ import {
 } from "@/components/ui/hover-card";
 import {
 	formatDuration,
+	formatPercentage,
 	formatPLN,
 	formatTrend,
+} from "@/lib/format-helper";
+import {
+	getArrowRotation,
+	getLongestDayInfo,
+	getPercentageColor,
+	getSessionsForDateRange,
+	longestStreak,
+	percentageChange,
 	totalEarnings,
 	totalMinutes,
 	workDaysStreakFormat,
-} from "@/lib/format-helpers";
+} from "@/lib/helper-functions";
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { DateRange } from "react-day-picker";
 import { Doc } from "../../../../../convex/_generated/dataModel";
 import { Badge } from "../../../../components/ui/badge";
 
 type StatsProps = {
 	rawSessions: Doc<"workSessions">[];
 	companies: Doc<"company">[];
+	dateRange?: DateRange;
 };
 
-export default function Stats({ rawSessions, companies }: StatsProps) {
-	const now = new Date();
-	// const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-
-	const getSessionsForMonth = (
-		sessions: Doc<"workSessions">[],
-		monthOffset: number = 0
-	) => {
-		const targetDate = new Date(
-			now.getFullYear(),
-			now.getMonth() + monthOffset,
-			1
-		);
-
-		return sessions.filter((session) => {
-			const start = new Date(session.startTime);
-			return (
-				start.getMonth() === targetDate.getMonth() &&
-				start.getFullYear() === targetDate.getFullYear()
+export default function Stats({
+	rawSessions,
+	companies,
+	dateRange,
+}: StatsProps) {
+	const getComparisonPeriod = (dateRange?: DateRange) => {
+		if (!dateRange?.from || !dateRange?.to) {
+			const now = new Date();
+			const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+			const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+			const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+			const currentMonthEnd = new Date(
+				now.getFullYear(),
+				now.getMonth() + 1,
+				0
 			);
-		});
+
+			return {
+				type: "month",
+				label: "vs last month",
+				currentPeriod: getSessionsForDateRange(
+					rawSessions,
+					currentMonthStart,
+					currentMonthEnd
+				),
+				previousPeriod: getSessionsForDateRange(
+					rawSessions,
+					lastMonthStart,
+					lastMonthEnd
+				),
+			};
+		}
+
+		const from = dateRange.from;
+		const to = dateRange.to;
+		const daysDiff =
+			Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+		if (daysDiff === 1) {
+			const prevDay = new Date(from);
+			prevDay.setDate(prevDay.getDate() - 1);
+
+			const currentPeriod = getSessionsForDateRange(rawSessions, from, from);
+			const previousPeriod = getSessionsForDateRange(
+				rawSessions,
+				prevDay,
+				prevDay
+			);
+
+			console.log("Current day:", from.toDateString());
+			console.log("Previous day:", prevDay.toDateString());
+			console.log("Current period sessions:", currentPeriod);
+			console.log("Previous period sessions:", previousPeriod);
+
+			return {
+				type: "day",
+				label: "vs previous day",
+				currentPeriod: currentPeriod,
+				previousPeriod: previousPeriod,
+			};
+		} else if (daysDiff <= 7) {
+			const periodLength = daysDiff;
+			const prevStart = new Date(from);
+			prevStart.setDate(prevStart.getDate() - periodLength);
+			const prevEnd = new Date(to);
+			prevEnd.setDate(prevEnd.getDate() - periodLength);
+
+			return {
+				type: "period",
+				label: `vs previous ${daysDiff} days`,
+				currentPeriod: getSessionsForDateRange(rawSessions, from, to),
+				previousPeriod: getSessionsForDateRange(
+					rawSessions,
+					prevStart,
+					prevEnd
+				),
+			};
+		} else {
+			const prevStart = new Date(from);
+			const prevEnd = new Date(to);
+
+			if (daysDiff <= 31) {
+				prevStart.setMonth(prevStart.getMonth() - 1);
+				prevEnd.setMonth(prevEnd.getMonth() - 1);
+
+				return {
+					type: "month",
+					label: "vs same period last month",
+					currentPeriod: getSessionsForDateRange(rawSessions, from, to),
+					previousPeriod: getSessionsForDateRange(
+						rawSessions,
+						prevStart,
+						prevEnd
+					),
+				};
+			} else {
+				prevStart.setFullYear(prevStart.getFullYear() - 1);
+				prevEnd.setFullYear(prevEnd.getFullYear() - 1);
+
+				return {
+					type: "year",
+					label: "vs same period last year",
+					currentPeriod: getSessionsForDateRange(rawSessions, from, to),
+					previousPeriod: getSessionsForDateRange(
+						rawSessions,
+						prevStart,
+						prevEnd
+					),
+				};
+			}
+		}
 	};
 
-	const monthSessions = getSessionsForMonth(rawSessions, 0);
-	const lastMonthSessions = getSessionsForMonth(rawSessions, -1);
+	const comparison = getComparisonPeriod(dateRange);
+
+	const currentSessions = comparison.currentPeriod;
+	const previousSessions = comparison.previousPeriod;
+
+	// Hours
+	const totalMinutesCurrent = totalMinutes(currentSessions);
+	const totalMinutesPrevious = totalMinutes(previousSessions);
+
+	const totalMinutesDifference = totalMinutesCurrent - totalMinutesPrevious;
+
+	const hoursPercentChange = percentageChange(
+		totalMinutesCurrent,
+		totalMinutesPrevious
+	);
+
+	// Salary
 	const companiesWorkedThisMonthDisplay = () => {
 		const companiesWorkedThisMonth = new Set(
-			monthSessions.map((s) => s.companyId)
+			currentSessions.map((s) => s.companyId)
 		).size;
 		if (companiesWorkedThisMonth === 0) {
 			return "0 companies";
@@ -66,46 +182,21 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 		return `${companiesWorkedThisMonth} companies`;
 	};
 
-	const totalMinutesThisMonth = totalMinutes(monthSessions);
-	const totalTime = formatDuration(totalMinutesThisMonth);
+	const totalSalaryCurrent = totalEarnings(currentSessions, companies);
+	const totalSalaryPrevious = totalEarnings(previousSessions, companies);
 
-	const totalMinutesLastMonth = totalMinutes(lastMonthSessions);
-	const totalTimeLastMonth = formatDuration(totalMinutesLastMonth);
+	const totalSalaryDifference = totalSalaryCurrent - totalSalaryPrevious;
 
-	const hourTrend = totalMinutesThisMonth - totalMinutesLastMonth;
-	const formattedHourTrend = formatTrend(hourTrend);
+	const salaryPercentChange = percentageChange(
+		totalSalaryCurrent,
+		totalSalaryPrevious
+	);
 
-	const totalEarningsThisMonth = totalEarnings(monthSessions, companies);
-	const totalEarningsLastMonth = totalEarnings(lastMonthSessions, companies);
-	const salaryTrend = totalEarningsThisMonth - totalEarningsLastMonth;
-
-	const getLongestDayInfo = (sessions: Doc<"workSessions">[]) => {
-		const dailyTotals = new Map<string, number>();
-
-		sessions.forEach((session) => {
-			const date = new Date(session.startTime).toDateString();
-			const minutes = totalMinutes([session]);
-			dailyTotals.set(date, (dailyTotals.get(date) || 0) + minutes);
-		});
-
-		let longestDay = 0;
-		let longestDayDate = "";
-
-		for (const [date, minutes] of dailyTotals) {
-			if (minutes > longestDay) {
-				longestDay = minutes;
-				longestDayDate = date;
-			}
-		}
-
-		return { longestDay, longestDayDate };
-	};
-
-	const { longestDay, longestDayDate } = getLongestDayInfo(monthSessions);
+	//Longest Day
+	const { longestDay, longestDayDate } = getLongestDayInfo(currentSessions);
 	const { longestDay: longestDayLastMonth } =
-		getLongestDayInfo(lastMonthSessions);
+		getLongestDayInfo(previousSessions);
 
-	const longestDayFormatted = formatDuration(longestDay);
 	const longestDayDateFormatted = longestDayDate
 		? new Date(longestDayDate).toLocaleDateString("en-GB", {
 				day: "numeric",
@@ -114,135 +205,41 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 		: "";
 
 	const longestDayTrend = longestDay - longestDayLastMonth;
-	const longestDayTrendFormatted = formatTrend(longestDayTrend);
 
-	const calculateWorkStreak = (sessions: Doc<"workSessions">[]) => {
-		if (sessions.length === 0) return 0;
+	const longestDayPercentChange = percentageChange(
+		longestDay,
+		longestDayLastMonth
+	);
 
-		const sortedSessions = sessions.sort(
-			(a, b) =>
-				new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-		);
+	// Work streak
+	const currentWorkStreak = longestStreak(currentSessions);
+	const previousWorkStreak = longestStreak(previousSessions);
 
-		const workDays = Array.from(
-			new Set(
-				sortedSessions.map(
-					(session) => new Date(session.startTime).toISOString().split("T")[0]
-				)
-			)
-		)
-			.sort()
-			.reverse();
+	const workStreakTrend = currentWorkStreak - previousWorkStreak;
 
-		if (workDays.length === 0) return 0;
-		let streak = 0;
-		const today = new Date();
+	const workStreakPercentChange = percentageChange(
+		currentWorkStreak,
+		previousWorkStreak
+	);
 
-		for (let i = 0; i < workDays.length; i++) {
-			const workDay = new Date(workDays[i]);
-			const expectedDay = new Date(today);
-			expectedDay.setDate(today.getDate() - i);
-
-			if (workDay.toDateString() === expectedDay.toDateString()) {
-				streak++;
-			} else {
-				break;
-			}
+	const getCardDescription = () => {
+		if (!dateRange?.from || !dateRange?.to) {
+			return new Date().toLocaleString("en-GB", {
+				month: "long",
+				year: "numeric",
+			});
 		}
 
-		return streak;
-	};
+		const from = dateRange.from.toLocaleDateString("en-GB", {
+			day: "numeric",
+			month: "short",
+		});
+		const to = dateRange.to.toLocaleDateString("en-GB", {
+			day: "numeric",
+			month: "short",
+		});
 
-	const calculateLongestStreakInMonth = (sessions: Doc<"workSessions">[]) => {
-		if (sessions.length === 0) return 0;
-
-		const workDays = Array.from(
-			new Set(
-				sessions.map(
-					(session) => new Date(session.startTime).toISOString().split("T")[0]
-				)
-			)
-		).sort();
-
-		if (workDays.length === 0) return 0;
-
-		let maxStreak = 1;
-		let currentStreak = 1;
-
-		for (let i = 1; i < workDays.length; i++) {
-			const currentDay = new Date(workDays[i]);
-			const previousDay = new Date(workDays[i - 1]);
-
-			const dayDifference = Math.floor(
-				(currentDay.getTime() - previousDay.getTime()) / (1000 * 60 * 60 * 24)
-			);
-
-			if (dayDifference === 1) {
-				currentStreak++;
-				maxStreak = Math.max(maxStreak, currentStreak);
-			} else {
-				currentStreak = 1;
-			}
-		}
-
-		return maxStreak;
-	};
-
-	const workStreak = calculateWorkStreak(monthSessions);
-	const workStreakFormatted = workDaysStreakFormat(workStreak);
-	const lastMonthLongestStreak =
-		calculateLongestStreakInMonth(lastMonthSessions);
-
-	const salaryPercentChange =
-		totalEarningsLastMonth === 0
-			? totalEarningsThisMonth > 0
-				? 100
-				: 0
-			: ((totalEarningsThisMonth - totalEarningsLastMonth) /
-					totalEarningsLastMonth) *
-			  100;
-
-	const hoursPercentChange =
-		totalMinutesLastMonth === 0
-			? totalMinutesThisMonth > 0
-				? 100
-				: 0
-			: ((totalMinutesThisMonth - totalMinutesLastMonth) /
-					totalMinutesLastMonth) *
-			  100;
-
-	const longestDayPercentChange =
-		longestDayLastMonth === 0
-			? longestDay > 0
-				? 100
-				: 0
-			: ((longestDay - longestDayLastMonth) / longestDayLastMonth) * 100;
-
-	const workStreakPercentChange =
-		lastMonthLongestStreak === 0
-			? workStreak > 0
-				? 100
-				: 0
-			: ((workStreak - lastMonthLongestStreak) / lastMonthLongestStreak) * 100;
-
-	const formatPercentage = (percent: number) => {
-		if (percent === 0) return "0%";
-		const sign = percent > 0 ? "+" : "";
-		const formatted =
-			percent % 1 === 0 ? percent.toString() : percent.toFixed(1);
-		return `${sign}${formatted}%`;
-	};
-
-	const getPercentageColor = (percent: number) => {
-		if (percent > 0) return "text-chart-2";
-		if (percent < 0) return "text-chart-5";
-		return "text-chart-3";
-	};
-
-	const getArrowRotation = (percent: number) => {
-		if (percent > 0) return "rotate-[45deg]";
-		if (percent < 0) return "rotate-[135deg]";
-		return "rotate-[90deg]";
+		return from === to ? from : `${from} - ${to}`;
 	};
 
 	return (
@@ -250,12 +247,12 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 			<Card>
 				<CardHeader>
 					<CardTitle>Total hours</CardTitle>
-					<CardDescription>
-						{now.toLocaleString("en-GB", { month: "long", year: "numeric" })}
-					</CardDescription>
+					<CardDescription>{getCardDescription()}</CardDescription>
 				</CardHeader>
 				<CardContent className="flex justify-between items-center">
-					<p className="text-2xl font-bold">{totalTime}</p>
+					<p className="text-2xl font-bold">
+						{formatDuration(totalMinutesCurrent)}
+					</p>
 					<HoverCard>
 						<HoverCardTrigger asChild>
 							<Badge variant={"outline"}>
@@ -269,16 +266,40 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 							</Badge>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-80">
-							<div className="space-y-2">
-								<h4 className="text-sm font-semibold">Hours Comparison</h4>
-								<div className="space-y-1 text-sm">
-									<p>This month: {totalTime}</p>
-									<p>Last month: {totalTimeLastMonth}</p>
-									<p>Difference: {formattedHourTrend}</p>
+							<div className="space-y-4 p-2">
+								<h4 className="text-md font-bold text-foreground">
+									Hours Comparison
+								</h4>
+								<div className="space-y-2">
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Selected period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatDuration(totalMinutesCurrent)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Comparison period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatDuration(totalMinutesPrevious)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm pt-2 border-t">
+										<span className="text-muted-foreground">Difference:</span>
+										<span
+											className={`font-bold ${getPercentageColor(
+												totalMinutesDifference
+											)}`}
+										>
+											{formatTrend(totalMinutesDifference)}
+										</span>
+									</div>
 								</div>
 								<p className="text-xs text-muted-foreground">
-									Percentage change in total working hours compared to previous
-									month
+									{comparison.label}
 								</p>
 							</div>
 						</HoverCardContent>
@@ -293,9 +314,7 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="flex justify-between items-center">
-					<p className="text-2xl font-bold">
-						{formatPLN(totalEarningsThisMonth)}
-					</p>
+					<p className="text-2xl font-bold">{formatPLN(totalSalaryCurrent)}</p>
 					<HoverCard>
 						<HoverCardTrigger asChild>
 							<Badge variant={"outline"}>
@@ -311,24 +330,47 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 							</Badge>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-80">
-							<div className="space-y-2">
-								<h4 className="text-sm font-semibold">Salary Comparison</h4>
-								<div className="space-y-1 text-sm">
-									<p>This month: {formatPLN(totalEarningsThisMonth)}</p>
-									<p>Last month: {formatPLN(totalEarningsLastMonth)}</p>
-									<p>
-										Difference: {salaryTrend > 0 ? "+" : ""}
-										{formatPLN(salaryTrend)}
-									</p>
+							<div className="space-y-4 p-2">
+								<h4 className="text-md font-bold text-foreground">
+									Salary Comparison
+								</h4>
+								<div className="space-y-2">
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Selected period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatPLN(totalSalaryCurrent)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Comparison period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatPLN(totalSalaryPrevious)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm pt-2 border-t">
+										<span className="text-muted-foreground">Difference:</span>
+										<span
+											className={`font-bold ${getPercentageColor(
+												totalSalaryDifference
+											)}`}
+										>
+											{formatPLN(totalSalaryDifference)}
+										</span>
+									</div>
 								</div>
 								<p className="text-xs text-muted-foreground">
-									Percentage change compared to previous month
+									{comparison.label}
 								</p>
 							</div>
 						</HoverCardContent>
 					</HoverCard>
 				</CardContent>
 			</Card>
+
 			<Card>
 				<CardHeader>
 					<CardTitle>Longest day</CardTitle>
@@ -337,7 +379,7 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="flex justify-between items-center">
-					<p className="text-2xl font-bold">{longestDayFormatted}</p>
+					<p className="text-2xl font-bold">{formatDuration(longestDay)}</p>
 					<HoverCard>
 						<HoverCardTrigger asChild>
 							<Badge variant={"outline"}>
@@ -353,31 +395,56 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 							</Badge>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-80">
-							<div className="space-y-2">
-								<h4 className="text-sm font-semibold">
+							<div className="space-y-4 p-2">
+								<h4 className="text-md font-bold text-foreground">
 									Longest Day Comparison
 								</h4>
-								<div className="space-y-1 text-sm">
-									<p>This month: {longestDayFormatted}</p>
-									<p>Last month: {formatDuration(longestDayLastMonth)}</p>
-									<p>Difference: {longestDayTrendFormatted}</p>
+								<div className="space-y-2">
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Selected period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatDuration(longestDay)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Comparison period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatDuration(longestDayLastMonth)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm pt-2 border-t">
+										<span className="text-muted-foreground">Difference:</span>
+										<span
+											className={`font-bold ${getPercentageColor(
+												longestDayTrend
+											)}`}
+										>
+											{formatTrend(longestDayTrend)}
+										</span>
+									</div>
 								</div>
 								<p className="text-xs text-muted-foreground">
-									Percentage change in longest working day compared to previous
-									month
+									{comparison.label}
 								</p>
 							</div>
 						</HoverCardContent>
 					</HoverCard>
 				</CardContent>
 			</Card>
+
 			<Card>
 				<CardHeader>
 					<CardTitle>Work streak</CardTitle>
 					<CardDescription>Consecutive work days</CardDescription>
 				</CardHeader>
 				<CardContent className="flex justify-between items-center">
-					<p className="text-2xl font-bold">{workStreakFormatted}</p>
+					<p className="text-2xl font-bold">
+						{workDaysStreakFormat(currentWorkStreak)}
+					</p>
 					<HoverCard>
 						<HoverCardTrigger asChild>
 							<Badge variant={"outline"}>
@@ -393,24 +460,41 @@ export default function Stats({ rawSessions, companies }: StatsProps) {
 							</Badge>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-80">
-							<div className="space-y-2">
-								<h4 className="text-sm font-semibold">
+							<div className="space-y-4 p-2">
+								<h4 className="text-md font-bold text-foreground">
 									Work Streak Comparison
 								</h4>
-								<div className="space-y-1 text-sm">
-									<p>Current streak: {workStreakFormatted}</p>
-									<p>
-										{"Last month's longest: "}
-										{workDaysStreakFormat(lastMonthLongestStreak)}
-									</p>
-									<p>
-										Difference:{" "}
-										{workStreak - lastMonthLongestStreak > 0 ? "+" : ""}
-										{workStreak - lastMonthLongestStreak} days
-									</p>
+								<div className="space-y-2">
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Selected period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{workDaysStreakFormat(currentWorkStreak)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Comparison period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{workDaysStreakFormat(previousWorkStreak)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm pt-2 border-t">
+										<span className="text-muted-foreground">Difference:</span>
+										<span
+											className={`font-bold ${getPercentageColor(
+												workStreakTrend
+											)}`}
+										>
+											{workStreakTrend > 0 ? "+" : ""}
+											{workStreakTrend} days
+										</span>
+									</div>
 								</div>
 								<p className="text-xs text-muted-foreground">
-									Current streak vs longest streak from previous month
+									{comparison.label}
 								</p>
 							</div>
 						</HoverCardContent>

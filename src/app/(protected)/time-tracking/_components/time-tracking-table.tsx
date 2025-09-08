@@ -84,7 +84,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { formatDuration, formatPLN } from "@/lib/format-helpers";
+import { formatDuration, formatPLN } from "@/lib/format-helper";
 import { cn } from "@/lib/utils";
 import { useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
