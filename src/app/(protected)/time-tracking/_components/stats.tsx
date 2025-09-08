@@ -15,7 +15,7 @@ import {
 	formatPercentage,
 	formatPLN,
 	formatTrend,
-} from "@/lib/format-helper";
+} from "@/lib/format-helpers";
 import {
 	getArrowRotation,
 	getLongestDayInfo,
