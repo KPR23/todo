@@ -63,7 +63,7 @@ export default function Stats({
 					rawSessions,
 					currentMonthStart,
 					currentMonthEnd
-				), // ✅ Tylko aktualny miesiąc
+				),
 				previousPeriod: getSessionsForDateRange(
 					rawSessions,
 					lastMonthStart,
@@ -266,14 +266,37 @@ export default function Stats({
 							</Badge>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-80">
-							<div className="space-y-2">
-								<h4 className="text-sm font-semibold">Hours Comparison</h4>
-								<div className="space-y-1 text-sm">
-									<p>Selected period: {formatDuration(totalMinutesCurrent)}</p>
-									<p>
-										Comparison period: {formatDuration(totalMinutesPrevious)}
-									</p>
-									<p>Difference: {formatTrend(totalMinutesDifference)}</p>
+							<div className="space-y-4 p-2">
+								<h4 className="text-md font-bold text-foreground">
+									Hours Comparison
+								</h4>
+								<div className="space-y-2">
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Selected period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatDuration(totalMinutesCurrent)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Comparison period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatDuration(totalMinutesPrevious)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm pt-2 border-t">
+										<span className="text-muted-foreground">Difference:</span>
+										<span
+											className={`font-bold ${getPercentageColor(
+												totalMinutesDifference
+											)}`}
+										>
+											{formatTrend(totalMinutesDifference)}
+										</span>
+									</div>
 								</div>
 								<p className="text-xs text-muted-foreground">
 									{comparison.label}
@@ -307,12 +330,37 @@ export default function Stats({
 							</Badge>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-80">
-							<div className="space-y-2">
-								<h4 className="text-sm font-semibold">Salary Comparison</h4>
-								<div className="space-y-1 text-sm">
-									<p>Selected period: {formatPLN(totalSalaryCurrent)}</p>
-									<p>Comparison period: {formatPLN(totalSalaryPrevious)}</p>
-									<p>Difference: {formatPLN(totalSalaryDifference)}</p>
+							<div className="space-y-4 p-2">
+								<h4 className="text-md font-bold text-foreground">
+									Salary Comparison
+								</h4>
+								<div className="space-y-2">
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Selected period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatPLN(totalSalaryCurrent)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Comparison period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatPLN(totalSalaryPrevious)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm pt-2 border-t">
+										<span className="text-muted-foreground">Difference:</span>
+										<span
+											className={`font-bold ${getPercentageColor(
+												totalSalaryDifference
+											)}`}
+										>
+											{formatPLN(totalSalaryDifference)}
+										</span>
+									</div>
 								</div>
 								<p className="text-xs text-muted-foreground">
 									{comparison.label}
@@ -347,16 +395,37 @@ export default function Stats({
 							</Badge>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-80">
-							<div className="space-y-2">
-								<h4 className="text-sm font-semibold">
+							<div className="space-y-4 p-2">
+								<h4 className="text-md font-bold text-foreground">
 									Longest Day Comparison
 								</h4>
-								<div className="space-y-1 text-sm">
-									<p>Selected period: {formatDuration(longestDay)}</p>
-									<p>
-										Comparison period: {formatDuration(longestDayLastMonth)}
-									</p>
-									<p>Difference: {formatTrend(longestDayTrend)}</p>
+								<div className="space-y-2">
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Selected period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatDuration(longestDay)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Comparison period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{formatDuration(longestDayLastMonth)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm pt-2 border-t">
+										<span className="text-muted-foreground">Difference:</span>
+										<span
+											className={`font-bold ${getPercentageColor(
+												longestDayTrend
+											)}`}
+										>
+											{formatTrend(longestDayTrend)}
+										</span>
+									</div>
 								</div>
 								<p className="text-xs text-muted-foreground">
 									{comparison.label}
@@ -391,22 +460,38 @@ export default function Stats({
 							</Badge>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-80">
-							<div className="space-y-2">
-								<h4 className="text-sm font-semibold">
+							<div className="space-y-4 p-2">
+								<h4 className="text-md font-bold text-foreground">
 									Work Streak Comparison
 								</h4>
-								<div className="space-y-1 text-sm">
-									<p>
-										Selected period: {workDaysStreakFormat(currentWorkStreak)}
-									</p>
-									<p>
-										Comparison period:{" "}
-										{workDaysStreakFormat(previousWorkStreak)}
-									</p>
-									<p>
-										Difference: {workStreakTrend > 0 ? "+" : ""}
-										{workStreakTrend} days
-									</p>
+								<div className="space-y-2">
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Selected period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{workDaysStreakFormat(currentWorkStreak)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm">
+										<span className="text-muted-foreground">
+											Comparison period:
+										</span>
+										<span className="font-semibold text-foreground">
+											{workDaysStreakFormat(previousWorkStreak)}
+										</span>
+									</div>
+									<div className="flex justify-between items-center text-sm pt-2 border-t">
+										<span className="text-muted-foreground">Difference:</span>
+										<span
+											className={`font-bold ${getPercentageColor(
+												workStreakTrend
+											)}`}
+										>
+											{workStreakTrend > 0 ? "+" : ""}
+											{workStreakTrend} days
+										</span>
+									</div>
 								</div>
 								<p className="text-xs text-muted-foreground">
 									{comparison.label}

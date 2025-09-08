@@ -11,18 +11,18 @@ export function formatDuration(totalMinutes: number) {
 }
 
 export function formatTrend(totalMinutes: number) {
-	const isPositive = totalMinutes >= 0;
+	const isPositive = totalMinutes > 0;
 	const absoluteMinutes = Math.abs(totalMinutes);
 	const rounded = Math.round(absoluteMinutes);
 	const hours = Math.floor(rounded / 60);
 	const minutes = rounded % 60;
 
+	if (totalMinutes === 0) return "0min";
 	const sign = isPositive ? "+" : "-";
 
 	if (hours > 0 && minutes > 0) return `${sign}${hours}h ${minutes}min`;
 	if (hours > 0) return `${sign}${hours}h`;
-	if (minutes > 0) return `${sign}${minutes}min`;
-	return "0min";
+	return `${sign}${minutes}min`;
 }
 
 export function formatPLN(amount: number) {

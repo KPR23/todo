@@ -70,7 +70,9 @@ export default function DateRangePicker({
 			<DialogTrigger asChild>
 				<Button variant="outline">
 					{value?.from && value?.to
-						? `${value.from.toLocaleDateString()} - ${value.to.toLocaleDateString()}`
+						? `${value.from.toLocaleDateString(
+								"en-GB"
+						  )} - ${value.to.toLocaleDateString("en-GB")}`
 						: "Select Date Range"}
 				</Button>
 			</DialogTrigger>

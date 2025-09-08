@@ -88,14 +88,21 @@ export function getLongestDayInfo(sessions: Doc<"workSessions">[]) {
 export function calculateWorkStreak(sessions: Doc<"workSessions">[]) {
 	if (sessions.length === 0) return 0;
 
-	const sortedSessions = sessions.sort(
+	const sortedSessions = [...sessions].sort(
 		(a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
 	);
 
+	const formatLocalDate = (date: Date): string => {
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, "0");
+		const day = String(date.getDate()).padStart(2, "0");
+		return `${year}-${month}-${day}`;
+	};
+
 	const workDays = Array.from(
 		new Set(
-			sortedSessions.map(
-				(session) => new Date(session.startTime).toISOString().split("T")[0]
+			sortedSessions.map((session) =>
+				formatLocalDate(new Date(session.startTime))
 			)
 		)
 	)
@@ -107,11 +114,12 @@ export function calculateWorkStreak(sessions: Doc<"workSessions">[]) {
 	const today = new Date();
 
 	for (let i = 0; i < workDays.length; i++) {
-		const workDay = new Date(workDays[i]);
+		const workDay = workDays[i];
 		const expectedDay = new Date(today);
 		expectedDay.setDate(today.getDate() - i);
+		const expectedDayFormatted = formatLocalDate(expectedDay);
 
-		if (workDay.toDateString() === expectedDay.toDateString()) {
+		if (workDay === expectedDayFormatted) {
 			streak++;
 		} else {
 			break;
@@ -145,10 +153,19 @@ export function getSessionsForDateRange(
 export function longestStreak(sessions: Doc<"workSessions">[]) {
 	if (sessions.length === 0) return 0;
 
+	// Format date in local timezone to YYYY-MM-DD
+	const formatLocalDate = (date: Date): string => {
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, "0");
+		const day = String(date.getDate()).padStart(2, "0");
+		return `${year}-${month}-${day}`;
+	};
+
+	// Use a shallow copy before processing to avoid mutations
 	const workDays = Array.from(
 		new Set(
-			sessions.map(
-				(session) => new Date(session.startTime).toISOString().split("T")[0]
+			[...sessions].map((session) =>
+				formatLocalDate(new Date(session.startTime))
 			)
 		)
 	).sort();
@@ -162,8 +179,20 @@ export function longestStreak(sessions: Doc<"workSessions">[]) {
 		const currentDay = new Date(workDays[i]);
 		const previousDay = new Date(workDays[i - 1]);
 
+		// Calculate days between the two dates in local time
+		const currentDateObj = new Date(
+			currentDay.getFullYear(),
+			currentDay.getMonth(),
+			currentDay.getDate()
+		);
+		const prevDateObj = new Date(
+			previousDay.getFullYear(),
+			previousDay.getMonth(),
+			previousDay.getDate()
+		);
+
 		const dayDifference = Math.floor(
-			(currentDay.getTime() - previousDay.getTime()) / (1000 * 60 * 60 * 24)
+			(currentDateObj.getTime() - prevDateObj.getTime()) / (1000 * 60 * 60 * 24)
 		);
 
 		if (dayDifference === 1) {
