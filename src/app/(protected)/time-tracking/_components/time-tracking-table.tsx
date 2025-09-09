@@ -503,7 +503,7 @@ export default function TimeTrackingTable({
 										aria-hidden="true"
 									/>
 									Delete
-									<span className="bg-background text-muted-foreground/70 -me-1 inline-flex h-5 max-h-full items-center rounded border px-1 font-[inherit] text-[0.625rem] font-medium">
+									<span className="bg-background text-muted-foreground/70 -me-1 inline-flex max-h-full items-center rounded border p-1 font-[inherit] text-[0.75rem] font-medium">
 										{table.getSelectedRowModel().rows.length}
 									</span>
 								</Button>
