@@ -41,6 +41,12 @@ export default function Todo({ todo }: { todo: Doc<"todos"> }) {
 		(label) => label._id === todo.labelId
 	);
 
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+
+	const dueDay = new Date(todo.dueDate);
+	dueDay.setHours(0, 0, 0, 0);
+
 	const handleOnChangeTodo = () => {
 		if (todo.isCompleted) {
 			uncheckTodo({ todoId: todo._id }).catch((error) => {
@@ -136,31 +142,30 @@ export default function Todo({ todo }: { todo: Doc<"todos"> }) {
 								{todo.priority}
 							</Badge>
 						)}
-
-						{todo.dueDate && todo.dueDate < Date.now() ? (
-							<Badge className="bg-red-500/10 text-red-500 flex justify-center items-center gap-1">
-								<FontAwesomeIcon icon={faCalendarDays} />
-								{format(todo.dueDate, "dd/MM/yyyy")}
-							</Badge>
-						) : (
-							<Badge className="bg-muted-foreground/10 text-muted-foreground flex justify-center items-center gap-1">
+						{todo.dueDate && (
+							<Badge
+								className={
+									dueDay.getTime() < today.getTime()
+										? "bg-red-500/10 text-red-500 flex justify-center items-center gap-1"
+										: "bg-muted-foreground/10 text-muted-foreground flex justify-center items-center gap-1"
+								}
+							>
 								<FontAwesomeIcon icon={faCalendarDays} />
 								{format(todo.dueDate, "dd/MM/yyyy")}
 							</Badge>
 						)}
-						{todo.dueDate &&
-							!todo.isDefaultTime &&
-							(todo.dueDate < Date.now() ? (
-								<Badge className="bg-red-500/10 text-red-500 flex justify-center items-center gap-1">
-									<FontAwesomeIcon icon={faClock} />
-									{format(todo.dueDate, "HH:mm")}
-								</Badge>
-							) : (
-								<Badge className="bg-muted-foreground/10 text-muted-foreground flex justify-center items-center gap-1">
-									<FontAwesomeIcon icon={faClock} />
-									{format(todo.dueDate, "HH:mm")}
-								</Badge>
-							))}
+						{todo.dueDate && !todo.isDefaultTime && (
+							<Badge
+								className={
+									todo.dueDate < Date.now()
+										? "bg-red-500/10 text-red-500 flex justify-center items-center gap-1"
+										: "bg-muted-foreground/10 text-muted-foreground flex justify-center items-center gap-1"
+								}
+							>
+								<FontAwesomeIcon icon={faClock} />
+								{format(todo.dueDate, "HH:mm")}
+							</Badge>
+						)}
 					</div>
 				</Card>
 			</DialogTrigger>
