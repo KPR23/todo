@@ -8,11 +8,15 @@ import { useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { api } from "../../../../convex/_generated/api";
+import { startOfMonth } from "date-fns";
 
 export default function TimeTrackingPage() {
-	const [dateRange, setDateRange] = useState<DateRange | undefined>({
-		from: undefined,
-		to: undefined,
+	const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+		const today = new Date();
+		return {
+			from: startOfMonth(today),
+			to: today,
+		};
 	});
 
 	const rawSessions = useQuery(api.workSessions.getSessions);

@@ -224,10 +224,22 @@ export default function Stats({
 
 	const getCardDescription = () => {
 		if (!dateRange?.from || !dateRange?.to) {
-			return new Date().toLocaleString("en-GB", {
-				month: "long",
-				year: "numeric",
-			});
+			return "Month to date";
+		}
+
+		const today = new Date();
+		const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+		const isMonthToDate =
+			dateRange.from.getFullYear() === firstOfMonth.getFullYear() &&
+			dateRange.from.getMonth() === firstOfMonth.getMonth() &&
+			dateRange.from.getDate() === 1 &&
+			dateRange.to.getFullYear() === today.getFullYear() &&
+			dateRange.to.getMonth() === today.getMonth() &&
+			dateRange.to.getDate() === today.getDate();
+
+		if (isMonthToDate) {
+			return "Month to date";
 		}
 
 		const from = dateRange.from.toLocaleDateString("en-GB", {
